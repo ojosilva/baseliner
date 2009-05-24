@@ -1,0 +1,9 @@
+# Useful commands
+perl script\baseliner_create.pl model Baseliner DBIC::Schema Baseliner::Schema create=static dbi:SQLite:database=baseliner2.db 
+perl script\baseliner_create.pl model Baseliner DBIC::Schema Baseliner::Schema::Baseliner create=static constraint=^bali dbi:Oracle:POPULAR.WORLD uharvest uharvest
+perl script\baseliner_create.pl model Harvest DBIC::Schema Baseliner::Schema::Harvest create=static constraint=^har dbi:Oracle:TISO.WORLD wtscm1 wtscm1
+perl script\baseliner_create.pl model Harvest DBIC::Schema Baseliner::Schema::Harvest create=static constraint=^form dbi:Oracle:POPULAR.WORLD uharvest uharvest
+
+perl script\baseliner_create.pl model Harvest DBIC::Schema Baseliner::Harvest create=static constraint=^form dbi:Oracle:POPULAR.WORLD uharvest uharvest
+
+perl script\baseliner_create.pl model Baseliner DBIC::Schema Schema::Baseliner create=static constraint=^form dbi:Oracle:POPULAR.WORLD uharvest uharvest

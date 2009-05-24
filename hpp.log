@@ -1,0 +1,5 @@
+I00060040: New connection with Broker harvestdes  established.
+E03020003: Database error [CAI/PT][ODBC Oracle Dynamic driver][Oracle]ORA-03113: end-of-file on communication channel
+
+SQLSTATE=S1000 .
+Error: Could not create session.
