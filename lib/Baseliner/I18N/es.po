@@ -1,0 +1,2 @@
+msgid "Job Monitor"
+msgstr "Monitor de Pases"
