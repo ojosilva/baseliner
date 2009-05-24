@@ -1,0 +1,13 @@
+%# This component can be used from a Controller to create a new page and tab
+<& /site/header.html, "main=0" &>
+<script type="text/JavaScript">
+Ext.onReady(function(){
+		var tabpanel = Ext.getCmp('main-panel');
+		var comp = <% $c->stash->{form} %>
+		var tab = tabpanel.add(comp);
+		tab.setTitle( "<% $c->stash->{title} %>" );
+		tabpanel.setActiveTab(comp);
+});
+</script>
+</body>
+

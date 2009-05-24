@@ -1,0 +1,198 @@
+(function(){
+	// La fuente de Datos JSON con todos el listado:
+	var store=new Ext.data.JsonStore({
+		root: 'cat' , 
+		remoteSort: true,
+		totalProperty:"totalCount", 
+		id: 'rownum', 
+		url: '<% $c->stash->{url_store} %>?fid=<% 1 %>&par1=<% 2 %>&cam=<% 3 %>&filtro=ALL',
+		fields: <% $c->stash->{fields} %>
+	});
+
+	// Esta es la definición del objeto buscador
+	Ext.app.SearchField = Ext.extend(Ext.form.TwinTriggerField, {
+		initComponent : function(){
+			Ext.app.SearchField.superclass.initComponent.call(this);
+			this.on('specialkey', function(f, e){
+				if(e.getKey() == e.ENTER){
+					this.onTrigger2Click();
+				}
+			}, this);
+		},
+
+		validationEvent:false,
+		validateOnBlur:false,
+		trigger1Class:'x-form-clear-trigger',
+		trigger2Class:'x-form-search-trigger',
+		hideTrigger1:true,
+		width:280,
+		hasSearch : false,
+		paramName : 'query',
+
+		onTrigger1Click : function(){
+			if(this.hasSearch){
+				this.el.dom.value = '';
+				var o = {start: 0};
+				this.store.baseParams = this.store.baseParams || {};
+				this.store.baseParams[this.paramName] = '';
+				this.store.reload({params:o});
+				this.triggers[0].hide();
+				this.hasSearch = false;
+			}
+		},
+
+		onTrigger2Click : function(){
+			var v = this.getRawValue();
+			if(v.length < 1){ //>
+				this.onTrigger1Click();
+				return;
+			}
+			var o = {start: 0};
+			this.store.baseParams = this.store.baseParams || {};
+			this.store.baseParams[this.paramName] = v;
+			this.store.reload({params:o});
+			this.hasSearch = true;
+			this.triggers[0].show();
+		}
+	});
+
+	var addNewTabComp = function( purl, ptitle ){
+		var myTabPanel = Ext.getCmp('main-panel');
+		Ext.Ajax.request({
+			url: purl,
+			success: function(xhr) {
+				var comp = eval(xhr.responseText);
+				var tab = comp.add(newComponent);
+				tab.title( ptitle );
+				comp.setActiveTab(newComponent);
+			},
+			failure: function(xhr) {
+				var win = new Ext.Window({ layout: 'fit', 
+					autoScroll: true, title: ptitle+' create failed', 
+					height: 600, width: 600, 
+					html: 'Server communication failure:' + xhr.responseText });
+				win.show();
+			}
+		});
+	};
+
+	// Después de que cargue la página:
+		var ps = 15; //page_size
+		store.load({params:{start:0 , limit: ps}}); //, {{fid: '<% 1 %>' , par1: '<% 2 %>', cam: '<% 3 %>', filtro: 'ALL' }});
+
+		// create the grid
+		var grid = new Ext.grid.GridPanel({
+			renderTo: 'main-panel',
+			title: '<% $c->stash->{title} %>',
+			header: false,
+            stripeRows: true,
+			autoScroll: true,
+			autoWidth: true,
+			store: store,
+			viewConfig: [{
+					forceFit: true
+			}],
+			selModel: new Ext.grid.RowSelectionModel({singleSelect:true}),
+			loadMask:'true',
+			columns: <% $c->stash->{columns}  %>,
+			autoSizeColumns: true,
+			deferredRender:true,
+			bbar: new Ext.PagingToolbar({
+								store: store,
+								pageSize: ps,
+								displayInfo: true,
+								displayMsg: 'Rows {0} - {1} de {2}',
+								emptyMsg: "No hay registros disponibles"
+						}),        
+			tbar: [ 'Buscar: ', ' ',
+				new Ext.app.SearchField({
+					store: store,
+					params: {start: 0, limit: ps},
+					emptyText: '<Enter your search string>'
+				}),
+				new Ext.Toolbar.Button({
+					text: 'Add',
+					icon:'/static/ext/resources/images/default/dd/drop-add.gif',
+					cls: 'x-btn-text-icon',
+					handler: function() {
+						Baseliner.addNewTab('/core/registry', 'AddJob');
+					}
+				}),
+				new Ext.Toolbar.Button({
+					text: 'Etc',
+					icon:'/static/ext/resources/images/default/dd/drop-yes.gif',
+					cls: 'x-btn-text-icon',
+					handler: function() {
+						document.location.href = '<% "sistemas.mas?fid=&cam=&par1=&envname=&state="  %>';
+					}
+				}),
+				new Ext.Toolbar.Button({
+					text: 'Delete',
+					icon:'/static/ext/resources/images/default/dd/del.gif',
+					cls: 'x-btn-text-icon',
+					handler: function() {
+						var sm = grid.getSelectionModel();
+						var sel = sm.getSelected();
+						Ext.Msg.confirm('Confirmation', 'Are you sure you want to delete the element<br>' + sel.data.elemento + '?', 
+							function(btn){ 
+								if(btn=='yes') {
+									var conn = new Ext.data.Connection();
+					
+									conn.request({
+										url: '<% $c->stash->{url_del} %>',
+										params: {
+											action: 'delete',
+											id: sel.data.id
+										},
+										success: function(resp,opt) {
+											grid.getStore().remove(sel);
+										},
+										failure: function(resp,opt) {
+											Ext.Msg.alert('Error', 'Could not delete the item');
+										}
+									});	
+								}
+							} );
+					}
+				}),
+				'->'
+				]
+		});
+
+		grid.on("rowdblclick", function(grid, rowIndex, e ) {
+			var r = grid.getStore().getAt(rowIndex);
+            var url = '<% $c->stash->{url_detail} %>';
+            var ttitle = '<% $c->stash->{detail_title} %>';
+            var tfield = '<% $c->stash->{detail_field} %>';
+            if( ttitle!='' ) ttitle+=" ";
+            if( tfield!='' ) { 
+                ttitle += r.get( tfield );
+                url += "?" + tfield + "=" + r.get(tfield);
+            }
+            Baseliner.addNewTab( url, ttitle );
+            /* var win_data = {
+				layout: 'fit',
+				width: 400,
+				height: 200,
+				plain: true,
+				title: 'Details'
+			};
+            if( url != '' ) {
+                win_data.autoLoad = url;
+                win_data.scripts = true;
+            } else {
+                win_data.html = '--DUMMY--';
+            }
+			var win = new Ext.Window( win_data );
+			win.show();
+            */
+		});		
+
+		Baseliner.templateLoader.getTemplate('', '/templates/log.tpl', function(tpl) {
+			grid.tpl = tpl;	
+		});
+
+		Ext.getCmp('main-panel').setActiveTab( Ext.getCmp('main-panel').add(grid) ) ;
+		
+	return grid;
+})();

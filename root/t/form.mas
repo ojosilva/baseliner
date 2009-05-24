@@ -1,0 +1,9 @@
+<%args>
+	$form
+</%args>
+The form:
+     <div id="content">
+<% $form %>
+	</div>
+<%perl>
+</%perl>

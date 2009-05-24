@@ -1,0 +1,37 @@
+<%args>
+    $data 
+    $package
+</%args>
+<script>
+Ext.onReady(function() {
+    // create the grid
+    var grid = new Ext.grid.TableGrid("the-table", {
+      frame: false,
+      width: 400,
+      stripeRows: true // stripe alternate rows
+    });
+    grid.render();
+});
+</script>
+<style type="text/css">
+#the-table { border:1px solid #bbb;border-collapse:collapse;}
+#the-table td,#the-table th { border:1px solid #ccc;border-collapse:collapse;padding:5px; }
+</style>
+	    <h1>Endevor Package <% $package %></h1>
+<table cellspacing="0" id="the-table" width="400px">
+        <thead>
+            <tr style="background:#eeeeee;">
+                <th>Attribute</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+% foreach my $field ( sort keys %{ $data || {} } ) {
+        <tr>
+		<td> <% $field %> </td>
+		<td> <% $data->{$field} %> </td>
+		</tr>
+% }
+        </tbody>
+    </table>
+

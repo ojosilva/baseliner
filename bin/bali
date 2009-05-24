@@ -1,0 +1,2 @@
+cd /opt/ca/bali
+perl script/bali.pl $*

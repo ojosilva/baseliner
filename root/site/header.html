@@ -1,0 +1,78 @@
+<%args>
+	$show_main => 1
+	$show_menu => 1
+</%args>
+<!-- DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" -->
+<html>
+ <head>
+	<title>Baseliner</title>
+	<& '/site/nocache.html' &>
+	<link rel="stylesheet" type="text/css" href="<% $c->uri_for('/static/ext/resources/css/ext-all.css') %>" />
+    <link rel="stylesheet" type="text/css" href="<% $c->uri_for('/static/ext/resources/css/xtheme-gray.css') %>" />
+	<script type="text/javascript" src="<% $c->uri_for('/static/ext/adapter/ext/ext-base.js') %>"></script>
+	<script type="text/javascript" src="<% $c->uri_for('/static/ext/ext-all.js') %>"></script>
+	<link rel="stylesheet" type="text/css" href="<% $c->uri_for('/static/ext/docs/resources/docs.css') %>" />
+	<!-- script type="text/javascript" src="/static/ext/ext-all-debug.js"></script -->
+
+	<!--script type="text/javascript" src="/static/ext/air/ext-air.js"></script-->
+	<!-- link rel="stylesheet" type="text/css" href="/static/ext/air/resources/ext-air.css" /-->
+
+	<style type="text/css">
+	</style>
+
+	<script type="text/javascript" src="<% $c->uri_for('/site/tablegrid.js') %>"></script>
+	<script type="text/javascript" src="<% $c->uri_for('/site/tabfu.js') %>"></script>
+	<script type="text/javascript">
+Ext.onReady(function(){
+	Ext.BLANK_IMAGE_URL = '/static/ext/resources/images/default/s.gif';
+    Ext.QuickTips.init();
+
+	var tb = new Ext.Toolbar({
+        id: 'mainMenu',
+		region: 'north',
+        items: [
+        	'<img src="/static/images/distlogo.jpg" style="border:0px;"/>',
+        	'-',
+% my @menus;
+% push @menus,$_->ext_menu_json foreach ( $c->registry->search_for(key=>'menu.', depth=>1) ) ;
+% if( $show_menu ) {  print join ',',@menus; } else { print '{ }' }
+
+        ]
+    });
+	var viewport = new Ext.Viewport({
+		layout: 'border',
+		id: 'main-view',
+		renderTo: Ext.getBody(),
+		items: [ tb, 
+			{ xtype:'tabpanel', region: 'center', id:'main-panel',
+				defaults: { closable: true, autoScroll: true }, 
+				autoScroll: true, activeTab: 0, 
+				items: 
+% if( $show_main ) {
+				[ {title:'Main', closable: false, autoLoad: '/site/main.html', scripts: true } ]
+% } else { print 'null' } 
+			}
+		]
+	});
+	//{ xtype: 'panel', height: 80, id: 'south-panel', region: 'south', title: 'Log', autoScroll: true, collapsible: true, html: '<div id="south-div" />' }
+	//		var viewport = new Ext.Viewport({
+	//		layout: 'border',
+	//		id: 'main-view',
+	//		renderTo: Ext.getBody(),
+	//		items: [ tb, { xtype:'panel', region: 'center', id:'main-panel',autoScroll: true, layout: 'fit'} ]
+	//	});
+	//viewport.doLayout();	
+	//viewport.show();			
+});
+		
+	</script>
+
+%# <link href="/static/style2.css" type="text/css" rel="stylesheet"></link>
+
+</head>
+<body>
+<div id='run-panel' />
+
+<%init>
+use YAML;
+</%init>

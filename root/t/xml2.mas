@@ -1,0 +1,88 @@
+<& /site/header.html &>
+<%perl>
+   
+	use YAML;
+	use Data::Dumper;
+	use JavaScript::Dumper;
+	use XML::Smart;
+	my $xml = new XML::Smart( 'e:/baseliner/root/harform/GBP.xml' );
+	my @meta;
+	my %ext_map = (  combobox=>'combo', 'date-field'=>'datefield', 'text-area'=>'textarea', 'text-field'=>'textfield' );
+	my %kkey;
+	# get current data
+	( my $table = $xml->{harvest_form}->{dbtable} .'' )=~ s/(_|^)(.)/\U$2/g;
+	my $formobjid = 71;
+	#$c->model( 'Harvest' )->storage->dbh_do( sub { $_[1]->do( "alter session set nls_date_format = 'DD/MM/YYYY' "); });
+	my $row = $c->model( 'Harvest::' . $table )->search({ formobjid=>$formobjid })->first;
+	# prepare form
+	my $form = {};
+	$form->{url} = '/t/submit.mas';
+	$form->{frame} = \0;
+	$form->{method} = 'post';
+	push @meta, { xtype=>'hidden', name=>'formobjid', value=>71  };
+	for my $key (  $xml->{harvest_form}->order  ) {
+		if( grep( /$key/, qw/combobox text-field date-field text-area/ ) ) {
+			my $f = $xml->{harvest_form}->{$key}[ $kkey{$key}++ ];
+			my $field = "$f->{dbfield}";
+			next if $field eq 'formname';
+			my $item = { };
+			$item->{xtype} = $ext_map{$key};
+			$item->{id} = "$f->{dbfield}";
+			$item->{name} = "$f->{dbfield}";
+			$item->{fieldLabel} = "$f->{label}";
+			$item->{size} = "$f->{maxsize}" if( $key =~ /text-field/ );
+			$item->{anchor} = "80%" if(  $key =~ /text-area/ );
+			# assign current date to field
+			if(  $key =~ /date-field/ ) {
+				$item->{format} = 'd/m/Y';
+				my $val = $row->$field();
+				$item->{value} = \qq{ Date.parseDate("$val", "d/m/y" ) };
+				#$item->{listeners} = { change=> \" function(t,f,n){ t.value+= ' 00:00:00'; alert( 'hola:'+t.value )  }  " };
+			} else {
+				$item->{value} = $row->$field();
+			}
+			# Combo Stuff
+			if(  $key =~ /combobox/ ) {
+				my $k = 0;
+				my @entry;
+				for(  $f->{entry}->('@') ) {
+					push @entry, [ "id" . $k++ , "$_" ];
+				}
+				$item->{store} = \(  "new Ext.data.SimpleStore( " . js_dumper( { fields=>["id","text"], data=> [ @entry ] }) . ")" );
+				$item->{displayField} = 'text';
+				$item->{editable} = \0;
+				$item->{forceSelection} = \1;
+				$item->{triggerAction} = 'all';
+				$item->{mode} = 'local';
+			}
+			push @meta, $item; 
+		} else {
+			my $value = $xml->{harvest_form}->{$key} . "";
+			push @meta, { xtype=>'hidden', name=>$key, value=>$value  };
+		}
+	}
+	$form->{items} = \@meta;
+	my $extform = js_dumper( $form ); 
+</%perl>
+<script type="text/JavaScript">
+Ext.onReady(function(){
+		var tabpanel = Ext.getCmp('main-panel');
+		var comp = new Ext.FormPanel( <% $extform %> );
+		var tb = new Ext.Toolbar({
+			id: 'formtb',
+			items: [ 
+			'FormTitle',
+			'->',
+			{ xtype:'button', text: 'Submit', handler: function(){ Baseliner.formSubmit(comp.getForm())} },
+			{ xtype:'button',text:'Reset', handler: function() { comp.getForm().reset() }  }
+			] 
+		});
+		
+		var tab = tabpanel.add({ xtype:'panel', layout: 'fit' , border: 0 , tbar: tb, items: [ comp  ] });
+		tab.setTitle( "FORM" );
+		tabpanel.setActiveTab(tab);
+});
+</script>
+
+</body>
+

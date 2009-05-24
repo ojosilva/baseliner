@@ -1,0 +1,403 @@
+/*
+  * Author: Sierk Hoeksma. WebBlocks.eu
+  * Copyright 2007-2008, WebBlocks.  All rights reserved.
+  *
+  * This json is part of the extension Gui Designer
+  ************************************************************************************
+  *   This file is distributed on an AS IS BASIS WITHOUT ANY WARRANTY;
+  *   without even the implied warranty of MERCHANTABILITY or
+  *   FITNESS FOR A PARTICULAR PURPOSE.
+  ************************************************************************************
+
+  License: This source is licensed under the terms of the Open Source LGPL 3.0 license.
+  Commercial use is permitted to the extent that the code/component(s) do NOT become
+  part of another Open Source or Commercially licensed development library or toolkit
+  without explicit permission.Full text: http://www.opensource.org/licenses/lgpl-3.0.html
+
+  * Donations are welcomed: http://donate.webblocks.eu
+  */
+{ json: {
+   title : ('GuiDesigner (' + scope.version  + ')'),
+   size : scope.dockedMode ? {width : "100%", height : "100%"} : {width : 245, height: 350} ,
+   alignTo: [document,'br-br'],
+   //Function used within json which must be there in order to use designer to desgin
+   "scope.!on" : Ext.emptyFn,
+   "scope.!setConfig" : Ext.emptyFn,
+   "scope.!getConfig" : Ext.emptyFn,
+   "scope.!getCode"   : Ext.emptyFn,
+   "scope.!undo" : Ext.emptyFn,
+   "scope.!redo" : Ext.emptyFn,
+   "scope.!refresh" : Ext.emptyFn,
+   "scope.!setPropertyGrid" : Ext.emptyFn,
+   "scope.!removeElement" : Ext.emptyFn,
+   "scope.!selectElement" : Ext.emptyFn,
+   "scope.!appendConfig" : Ext.emptyFn,
+   "scope.!visualResize" : Ext.emptyFn,
+   "scope.!findByJsonId" : Ext.emptyFn,
+   "scope.!fireEvent"   : Ext.emptyFn,
+   "scope.!errorHandler": Ext.emptyFn,
+   "scope.!formatPath"  : Ext.emptyFn,
+   "scope.!repository" : false,
+
+   //From here on normal code stuff
+   "scope.!RepositoryId" : Ext.id(),
+   "scope.!ErrorId"    : Ext.id(),
+   "scope.!TabId"      : Ext.id(),
+   "scope.!enableCopy" : true,
+   "scope.!enableCopy" : true,
+   "scope.!enableShow" : true,
+   "scope.!enableEdit" : true,
+   "scope.!enableVersion" : true
+  },
+    layout: 'border',
+    border: false,
+    items : [{
+      xtype : 'tabpanel',
+      id    : scope.TabId,
+      activeTab : 0,
+      region:"center",
+      border:false,
+      minHeight : 150,
+      layoutConfig:{
+        activeOnTop:false,
+        animate:false,
+        autoWidth:true,
+        collapseFirst:false,
+        fill:true,
+        hideCollapseTool:false,
+        titleCollapse:true
+      },
+      tbar:[{
+            tooltip : 'Clear designarea',
+            iconCls:'icon-reset',
+            handler: function(){
+              scope.setConfig();
+            }
+          },'-',{
+            tooltip : 'Copy JSON to clipboard',
+            iconCls :'icon-designcopy',
+            hidden  : !scope.enableCopy || (!window.clipboardData && !window.netscape),
+            handler : function(){
+              var text = scope.getCode();
+              if (window.clipboardData) { // Internet Explorer
+                 window.clipboardData.setData("Text", ""+ text); // stupid IE... won't work without the ""+ ?!?!?
+              } else if (window.netscape) { // Mozilla
+                  try {
+                    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+                    var gClipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"].getService(Components.interfaces.nsIClipboardHelper);
+                    gClipboardHelper.copyString(text);
+                  } catch(e) {
+                    return Ext.Msg.alert('Information',e +'\n\nPlease type: "about:config" in your address bar.\nThen filter by "signed".\nChange the value of "signed.applets.codebase_principal_support" to true.\nYou should then be able to use this feature.');
+                  }
+              } else {
+                return Ext.Msg.alert('Information',"Your browser does not support this feature");
+              }
+            }
+          },{
+            tooltip : 'Edit the generated JSON',
+            iconCls:'icon-editEl',
+            hidden : !scope.enableEdit,
+            handler :  function (){
+                scope.hideVisualResize();
+                if (!scope.jsonWindow) {
+                  var tf = (scope.codePress && Ext.ux.CodePress)
+                   ?  new Ext.ux.CodePress({path:scope.codePressPath,language: 'javascript' ,autoResize:true,trim : true})
+                   :  new Ext.form.TextArea({autoCreate : {tag: "textarea",style:"width:160px;height:80px;",autocomplete: "off",wrap:"off"},resize:Ext.emptyFn});
+                  var jsonWindow = new Ext.Window({
+                      title       : "Edit JSON",
+                      iconCls     : 'icon-editEl',
+                      width       : 500,
+                      height      : 300,
+                      autoScroll  : true,
+                      layout      : 'fit',
+                      maximizable : true,
+                      items       : tf,
+                      modal       : true,
+                      closeAction : 'hide'
+                    });
+                  jsonWindow.tf = tf;
+                  jsonWindow.addButton({
+                      text    : "Close",
+                      scope   : jsonWindow,
+                      handler : function() { this.hide(); }
+                    });
+                  jsonWindow.addButton({
+                      text    : "Apply",
+                      scope   : jsonWindow,
+                      handler : function() {
+                        jsonWindow.el.mask("Please wait...");
+                        try {
+                          if (!scope.setConfig(tf.getValue()))  {
+                             jsonWindow.el.unmask();
+                             return;
+                          }
+                        } catch (e) {
+                           Ext.Msg.alert('Failure','Failed to apply code ' + e);
+                           jsonWindow.el.unmask();
+                           return;
+                        }
+                        jsonWindow.el.unmask();
+                        jsonWindow.hide();
+                      }
+                    });
+                 scope.jsonWindow = jsonWindow;
+                 scope.jsonWindow.on('resize',function () {tf.resize()});
+                }
+                scope.jsonWindow.show();
+                scope.jsonWindow.tf.setValue(scope.getCode());
+              }
+          },{
+            iconCls : 'icon-show',
+            tooltip : 'Show design in window',
+            hidden  : !scope.enableShow,
+            handler : function(){
+              var cfg = scope.getCode();
+              //Clear scope so tabindexed and id's are cleared
+              scope.setConfig();
+              var self = scope;
+              var curSize;
+              try {
+                var w = new Ext.ux.JsonWindow({
+                  title  : 'Show Config',
+                  border  : false,
+                  layout  : 'fit',
+                  width:600,
+                  height: 400,
+                  iconCls: 'icon-show',
+                  modal       : true,
+                  maximizable : true,
+                  closeAction : 'close',
+                  listeners   : { 
+                   'beforeclose' : function(){
+                     //Restore code in designer and capture resize
+                     self.undo();
+                     var s = w.getSize();                     
+                     if (s.width!=curSize.width || s.height!=curSize.height) {
+                       self.setJsonValue(self.getConfig(),'size',s);
+                     }
+                   }
+                 }
+                });
+                w.json.on('error',scope.errorHandler,this);
+                if (w.apply(cfg)) w.show();
+                curSize = w.getSize();
+             } catch (e) {
+                 Ext.Msg.alert('Error','Design contains error and cannot be display');
+                 scope.undo();
+               }
+            }
+          },'-',{
+            iconCls : 'icon-undo',
+            tooltip : "Undo last change",
+            id      : scope.undoBtnId,
+            handler : function(){scope.undo();},
+            disabled: true
+          },{
+            iconCls : 'icon-redo',
+            tooltip : "Redo last change",
+            id      : scope.redoBtnId,
+            handler : function(){scope.redo();},
+            disabled: true
+          },{
+            iconCls : 'icon-update',
+            tooltip : 'Redraw',
+            handler : function(){scope.refresh();}
+          },'->',{
+            iconCls : 'icon-error',
+            tooltip : 'Show or hide(clear) error tab',
+            id      : scope.ErrorId,
+            errorText : new Ext.form.Label(),
+            hidden  : true,
+            enableToggle : true,
+            errors  : [],
+            errorCount : 0,
+            maxErrors : 60,
+            plugins : {
+              //Create an error handler
+              init : function(cmp) {
+               scope.on('newconfig',function(noUndo){
+                 if (!noUndo) {
+                   this.setVisible(false);
+                   this.errors = [];
+                   this.errorCount = 0;
+                   this.toggle(false);
+                   if (this.errorTab) {
+                      var tab = Ext.getCmp(scope.TabId);
+                      tab.remove(this.errorTab);
+                      delete this.errorTab;
+                   }
+                 }
+               },cmp);
+               scope.errorHandler = function(type,exception) {
+                 if (cmp.errorCount==0) cmp.setVisible(true);
+                 cmp.errorCount++;
+                 cmp.errors.unshift('<i>' + this.dateStr() + '</i> <b>' + type
+                   + '</b> : ' + (exception ? exception.message ||exception : exception));
+                 while (cmp.errors.length>cmp.maxErrors) {cmp.errors.pop();}
+                 cmp.errorText.setText(cmp.errors.join('<br>'),false);
+                 cmp.setTooltip('<font color="red">' + cmp.errors[0] + '</font>');
+                 return false;
+               };
+               scope.on('error',scope.errorHandler,scope);
+              }
+            },
+            handler : function(){
+              var cmp = Ext.getCmp(scope.ErrorId);
+              var tab = Ext.getCmp(scope.TabId);
+              if (this.pressed) {
+                 cmp.errorTab = tab.add({
+                  iconCls : 'icon-error',
+                  tooltip : "A list with errors which have occurred",
+                  title   : 'Error',
+                  autoScroll:true,
+                  items   : cmp.errorText
+                 });
+                tab.activate(cmp.errorTab);
+                cmp.errorTab.doLayout();
+              } else if (cmp.errorTab) {
+                tab.remove(cmp.errorTab);
+                delete cmp.errorTab;
+                cmp.setVisible(false);
+                cmp.errorCount=0;
+              }
+            }
+          },{
+            iconCls : 'icon-options',
+            hidden  : !scope.enableOptions,
+            handler : function() {
+              scope.hideVisualResize();
+              if (scope.nocache || !scope.optionPanel) {
+                scope.optionPanel = new Ext.ux.JsonWindow({
+                  x     : -1000, // Window is hidden by moving X out of screen
+                  y     : -1000, //Window is hidden by moving Y out of screen
+                  autoLoad : scope.optionsUrl,
+                  scope    : scope,
+                  nocache  : scope.nocache,
+                  modal    : true,
+                  closable : true,
+                  closeAction : "hide"
+                });
+                scope.optionPanel.json.on('error',function(type,exception){
+                  Ext.Msg.alert('Option Load Error',type +" " + (typeof(exception)=='object' ? exception.message || exception : exception));
+                  this.close();
+                  return false;
+               },scope.optionPanel);
+              }
+              scope.optionPanel.show();
+            }
+          },{
+            iconCls : 'icon-help',
+            hidden  : !scope.enableVersion,
+            handler : function() {
+              scope.hideVisualResize();
+              var w = new Ext.Window({
+                title  : 'GuiDesigner (' + scope.version + ') by Sierk Hoeksma, API Information',
+                border  : false,
+                width:700,
+                height: 450,
+                iconCls: 'icon-help',
+                modal       : true,
+                maximizable : true,
+                closeAction : 'close',
+                items       : [{
+                 xtype : 'iframe',
+                 width : '100%',
+                 height: '100%',
+                 url   : scope.helpUrl
+                }]
+              });
+              w.show();
+            }
+          }
+      ],
+      items:[{ 
+         xtype : "jsonpanel",
+         autoLoad : scope.formatPath('{0}Ext.ux.guid.plugin.Designer.Design.json'),
+         scope   : scope,
+         title:"Design",
+         tooltip : "Design your ui by selecting elements from this tab"
+       },{ 
+         xtype : "jsonpanel",
+         autoLoad : scope.formatPath('{0}Ext.ux.guid.plugin.Designer.Select.json'),
+         scope   : scope,
+         title:"Select",
+         tooltip : "Tab with Codetree"
+       },{ 
+         xtype : "jsonpanel",
+         autoLoad : scope.formatPath('{0}Ext.ux.guid.plugin.Designer.Manage.json'),
+         scope   : scope,
+         title:"Manage",
+         tooltip : "Manage your design by performing an action of this tab"
+       }]
+      },{
+        xtype : 'guidpropertygrid',
+        region: 'south',
+        disabled: true,
+        border  : false,
+        minHeight : 150,
+        split:true,
+        height:170,
+        propertyTypes : scope.properties,
+        codePress : scope.codePress,
+        codePressPath : scope.codePressPath,
+        source : {},
+        listeners : {
+          'render': function() {
+             //Register it with designer
+             scope.setPropertyGrid(this);
+             //Create context menu
+             var id = Ext.id();
+             var contextMenu = new Ext.menu.Menu({items:[{
+               id      : id,
+               iconCls : 'icon-delete',
+               scope   : this,
+               handler : function(item,e) {
+                   scope.markUndo();
+                   var ds = this.store;
+                   var source =this.getSource();
+                   delete source[item.record.id];
+                   ds.remove(item.record);
+                   delete item.record;
+                   if (scope.isEmpty(source)) {
+                     scope.removeElement(scope.activeElement,"noundo");
+                   } else {
+                     scope.redrawElement();
+                   }
+                 }.createDelegate(this)
+             }]});
+             //Connect property grid contextMenu
+             this.on('rowcontextmenu', function(g, idx, e) {
+                 e.stopEvent();
+                 var r = this.store.getAt(idx);
+                 if (!r) { return false; }
+                 var i = contextMenu.items.get(id);
+                 i.setText('Delete property "' + r.id + '"');
+                 i.record = r;
+                 contextMenu.showAt(e.getXY());
+               }, this);
+          }
+        },
+        bbar : ['Add ',
+          new Ext.form.ComboBox({
+            mode           : 'local',
+            width          :  205,
+            valueField     : 'name',
+            displayField   : 'name',
+            store          : scope.properties,
+            listeners    : {
+              'specialkey' : function(tf,e) {
+                    var name = tf.getValue() || (scope.customProperties ? tf.getRawValue() : '');
+                    var ds = scope.propertyGrid.store, defaultVal = "";
+                    if (e.getKey() == e.ENTER && name != '' && !ds.getById(name)) {
+                       var i = this.store.find('name',name);
+                       if (i!=-1) defaultVal = this.store.getAt(i).get('defaults') || defaultVal;
+                       tf.setValue(''); //Clear add input
+                       ds.add(new Ext.grid.PropertyRecord({name:name, value:defaultVal}, name));
+                       scope.propertyGrid.startEditing(ds.getCount()-1, 1);
+                    }
+              }
+            }
+         })
+       ]
+   }]
+}

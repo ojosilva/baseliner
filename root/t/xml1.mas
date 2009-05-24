@@ -1,0 +1,83 @@
+<& /site/header.html &>
+<%perl>
+   
+ use YAML;
+ use Data::Dumper;
+ use XML::Smart;
+ my $xml = new XML::Smart( 'e:/baseliner/root/harform/GBP.xml' );
+ my %ret;
+ my @fu_meta;
+ my $submit_id = "GBP-submit";
+ my %fu_type = (  combobox=>'Select', 'date-field'=>'Date', 'text-area'=>'Textarea', 'text-field'=>'Text' );
+ my %kkey;
+ for my $key (  $xml->{harvest_form}->order  ) {
+	#print "============" . $key . "\n";
+	#print Dump $xml->{harvest_form}->{$key};
+	if( grep( /$key/, qw/combobox text-field date-field text-area/ ) ) {
+		my $f = $xml->{harvest_form}->{$key}[ $kkey{$key}++ ];
+		# FormFu attrs
+		my $fu = { };
+		$fu->{type} = $fu_type{$key};
+		$fu->{id} = "$f->{dbfield}";
+		$fu->{name} = "$f->{dbfield}";
+		$fu->{label} = "$f->{label}";
+		$fu->{size} = "$f->{maxsize}" if( $key =~ /text-field/ );
+		# ExtJS attributes
+		$fu->{attrs} = {};
+		$fu->{attrs}->{anchor} = "80%" if(  $key =~ /text-area/ );
+		# Combo Stuff
+		if(  $key =~ /combobox/ ) {
+			my $k = 0;
+			for(  $f->{entry}->('@') ) {
+				warn "==============================$_";
+				push @{ $fu->{options} }, [ "id" . $k++ , "$_" ];
+			}
+		}
+		push @fu_meta, $fu; 
+	} else {
+		$ret{$key} = $xml->{harvest_form}->{$key} . "";
+	}
+ }
+
+ for my $f (  @fu_meta ) {
+#	print "FIELD==" . Dump $f;
+ }
+# print join(',', map { Dump $_ } values %ret );
+
+	use HTML::FormFu::ExtJS;
+    my $form = new HTML::FormFu::ExtJS( {
+            action   => '/t/formsub.mas',
+			indicator => 'submit',
+            elements => [ @fu_meta ],
+        }
+    );
+	#print join(  ",\n", split /,/, $form );
+# my $twig=XML::Twig->new();    # create the twig
+#  $twig->parsefile( 'e:/baseliner/root/harform/GBP.xml' ); # build it
+#	for(  $twig->root->children ) {
+#
+#		print Dump $_;
+#	}
+</%perl>
+<script type="text/JavaScript">
+Ext.onReady(function(){
+		var tb = new Ext.Toolbar({
+			id: 'formtb',
+			items: [ 
+			'FormTitle',
+			'->',
+			{ xtype:'button', text: 'Submit', handler: function(){ Baseliner.formSubmit(comp.getForm())} },
+			{ xtype:'button',text:'Reset' } 
+			] 
+		});
+		var tabpanel = Ext.getCmp('main-panel');
+		var comp = <% $form %>
+		
+		var tab = tabpanel.add({ xtype:'panel', layout: 'fit' , border: 0 , tbar: tb, items: [ comp  ] });
+		tab.setTitle( "FORM" );
+		tabpanel.setActiveTab(tab);
+});
+</script>
+
+</body>
+

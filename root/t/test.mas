@@ -1,0 +1,5 @@
+<h3>This is a test <% $cnt++ %></h3>
+
+<%once>
+	my $cnt;
+</%once>

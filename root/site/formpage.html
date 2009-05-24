@@ -1,0 +1,23 @@
+%# This component can be used from a Controller to create a new page and tab
+<& /site/header.html, show_main=>1 &>
+<script type="text/javascript">
+Ext.onReady(function(){
+		var tabpanel = Ext.getCmp('main-panel');
+		var comp = new Ext.FormPanel( <% $c->stash->{form} %>);
+		var tb = new Ext.Toolbar({
+			id: 'formtb',
+			items: [ 
+			'<% $c->stash->{title} %>',
+			'->',
+			{ xtype:'button', text: 'Submit', handler: function(){ Baseliner.formSubmit(comp.getForm())} },
+			{ xtype:'button',text:'Reset', handler: function() { comp.getForm().reset() }  }
+			] 
+		});
+		var tab = tabpanel.add({ xtype:'panel', layout: 'fit' , border: 0 , tbar: tb, items: [ comp  ] });
+		tab.setTitle( "<% $c->stash->{title} %>" );
+		tabpanel.setActiveTab(tab);
+});
+</script>
+
+</body>
+

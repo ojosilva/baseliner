@@ -1,0 +1,8 @@
+% $m->call_next;
+<%once>
+	use Encode qw( encode_utf8 is_utf8 );
+</%once>
+<%filter>
+	# Convert from characters to bytes if necessary.
+	$_ = encode_utf8( $_ ) if is_utf8( $_ );
+</%filter>

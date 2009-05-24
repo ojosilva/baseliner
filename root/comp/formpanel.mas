@@ -1,0 +1,16 @@
+	(function(){
+		var form = new Ext.FormPanel(
+			{
+				url      : '/scm/form_submit',
+				frame    : true,
+				title    : '<% $c->stash->{title} %>',
+				width    : <% $c->stash->{width} || 350 %>,
+				items 	 : <% js_dumper(  $c->stash->{data} ) %>
+			}
+		  );
+
+		return form;
+	})();
+<%init>
+	use JavaScript::Dumper;
+</%init>

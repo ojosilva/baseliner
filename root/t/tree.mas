@@ -1,0 +1,40 @@
+<script type="text/javascript">
+
+/*
+ * Ext JS Library 2.2
+ * Copyright(c) 2006-2008, Ext JS, LLC.
+ * licensing@extjs.com
+ * 
+ * http://extjs.com/license
+ */
+
+Ext.onReady(function(){
+    Ext.QuickTips.init();
+    // shorthand
+    var Tree = Ext.tree;
+    
+    var tree = new Tree.TreePanel({
+        useArrows:true,
+        autoScroll:true,
+        animate:true,
+        enableDD:true,
+        containerScroll: true,
+
+        // auto create TreeLoader
+        dataUrl: '/json/services',
+
+        root: {
+            nodeType: 'async',
+            text: 'Ext JS',
+            draggable:false,
+            id:'source'
+        }
+    });
+
+	var viewport = new Ext.Viewport({
+		layout:'border',
+		items:[tree]
+	});
+});
+
+</script>

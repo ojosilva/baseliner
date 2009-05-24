@@ -1,0 +1,40 @@
+<script type="text/javascript">
+
+var viewport = new Ext.Viewport({ 
+	items:[
+	
+{
+              xtype : "fieldset",
+              title : "Legend",
+              autoHeight : true,
+              items : [                
+              {
+                  xtype : "textfield",
+                  name : "textvalue",
+                  fieldLabel : "Field1"
+              },                {
+                  xtype : "textfield",
+                  name : "textvalue",
+                  fieldLabel : "Field2"
+              },                {
+                  xtype : "datepicker"
+              },                
+              {
+                  xtype : "combo",
+                  fieldLabel : "Text",
+                  name : "combovalue",
+                  hiddenName : "combovalue"
+              }]
+}	
+	
+	]
+}); 
+
+viewport.render('mi_id');
+
+
+</script>
+<div id="mi_content">
+<h3>Esto:</h3>
+<div id='mi_id'></div>
+</div>

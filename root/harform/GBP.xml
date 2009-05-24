@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE harvest_form SYSTEM "harwebForms.dtd">
+<harvest_form dbtable="form_gbp" id="form_gbp" name="GBP" numtabs="0">
+
+  <text-field cols="80" dbfield="formname" id="formname" label="Form Name" maxsize="128"/>
+
+  <text-area cols="80" dbfield="gbp_desc" id="gbp_desc" label="Descripción" maxsize="2000" readonly="false" rows="6"/>
+
+  <combobox cols="21" dbfield="gbp_origen" id="gbp_origen" label="Origen del Cambio" maxsize="21" rows="1">
+    <entry dbfield="gbp_origen">Registro de Objetivos</entry>
+    <entry dbfield="gbp_origen">Remedy</entry>
+    <entry dbfield="gbp_origen">Emergencia</entry>
+  </combobox>
+
+  <text-field cols="80" dbfield="gbp_rfc" id="gbp_rfc" label="Código de RFC" maxsize="40" readonly="false"/>
+
+  <date-field dbfield="gbp_inicio" id="gbp_inicio" label="Fecha Prevista Comienzo"/>
+
+  <date-field dbfield="gbp_fin" id="gbp_fin" label="Fecha Prevista Fin"/>
+
+  <text-area cols="80" dbfield="gbp_comentario" id="gbp_comentario" label="Comentarios" maxsize="2000" readonly="false" rows="6"/>
+
+</harvest_form>

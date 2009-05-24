@@ -1,0 +1,9 @@
+<body>
+<%perl>
+	my $rs = $c->model( 'Harvest::Harform' )->search({ formobjid=> 71 });
+	my $ft = $rs->first->formtypeobjid;
+	my $table = $ft->formtablename;
+	foreach(  $ft->harformtypedefs(undef, { order_by => 'attrid' }) ) {
+		print "<li>COL=====" . $_->columnname;	
+	}
+</%perl>

@@ -1,0 +1,49 @@
+<script type="text/javascript">
+
+Ext.onReady(function(){
+		var proxy=new Ext.data.HttpProxy({url:'/json/jobs'});
+		var reader=new Ext.data.JsonReader(
+				{
+					root: 'tracks'
+				},[
+					{name: 'appeId', mapping: 'appeId'},
+					{name: 'survId'},            
+					{name: 'location'}, 
+					{name: 'surveyDate'},
+					{name: 'surveyTime'},
+					{name: 'inputUserId'},
+					{name: 'modifyTime' }
+				]
+		);
+		var store=new Ext.data.Store(    {
+			proxy:proxy,
+			reader:reader
+		 });
+		store.load();
+	
+	    // create the grid
+	    var grid = new Ext.grid.GridPanel({
+	        store: store,
+	        columns: [
+	            {header: "appeId", width: 60, dataIndex: 'appeId', sortable: true},
+	            {header: "survId", width: 60, dataIndex: 'survId', sortable: true},
+	            {header: "location", width: 60, dataIndex: 'location', sortable: true},
+	            {header: "surveyDate", width: 100, dataIndex: 'surveyDate', sortable: true},
+	            {header: "surveyTime", width: 100, dataIndex: 'surveyTime', sortable: true},
+	            {header: "inputUserId", width:80, dataIndex: 'inputUserId', sortable: true},
+	            {header: "modifyTime", width:80, dataIndex: 'modifyTime', sortable: true}
+	        ],
+	        width:540,
+	        height:200	
+	    });
+	    
+	    grid.on("rowdblclick", function(grid) {
+	    	alert("ups");
+	    });
+	    
+	    grid.activate();
+	
+	});
+</script>
+	
+

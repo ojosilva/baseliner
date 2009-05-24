@@ -1,0 +1,98 @@
+TODO
+ - Make toolbox supporting tabpanel, so only one exits by multiple tabs designs
+ - Multiple select to change one or more items in one go
+ - In line editing of labels (fieldlabel,title,label)
+ - Allow multiple base directroy under file control
+ 
+ Change History:
+ Version 2.1.0:
+  + A compressed version of designer is added (Ext.ux.guid.plugin.Desginer-all.js) 
+  + Added a new json parser therefor begin and end tags are no longer needed in code
+  + Visual resize added activated by context menu
+  + Visual move of element in absolute layout activated by context menu
+  + Added XType fallback to panel for unknown xtypes
+  + All xtypes which are loaded before guidesigner is loaded are now selectable
+  + Found a good solotion for property grid error
+  + Split single javascript files containing multiple classes into files
+  + Added "scope.!<VAR>" in json object, so you can create local objects if they don't exist
+  + Toolbox is forced to do a layout before showing.
+  + Changed path ExtJs version can be changed, still using 2.0.1 as base because of stablility
+  + You can now add you own property editors, by setting "editor" in properties.json
+  + Undo and redo are now keeping track of selected element
+  + Active item is now selected in code tree
+  + Codetree can now also be used beside drag drop in designer to reorganize code elements.
+  + Url options can now beused to configure designer window: window=1 (shows window mode) docked=1 (will dock designer) debug=1 (compression off)
+  + A error statusicon and tab have been added to show errors. Click on error icon on statusbar to show or hide detailtab
+  + A simple loader for javascript and stylesheets is added (require)
+  + Third party design elements can be configured (componentFiles) to be added to Components tree
+  + Components can be ExtJs version dependend, just set isVersion in component config.
+  + Wizard are now stored in wizard directory in json format.
+  + Added code to allow tabpanel selection
+  + When adding a second form into a form, the second form is transformed into layout
+  + ScriptEditor has been replace by CodeField this also resolves a number of bugs in this area
+  + You can drag you saved code to the designer, which will be loaded through JSONPanel or in case when shift key pressed or Repository is not supporting url data is appended
+  + Optionpanel added
+  + Resize of show window is stored in json and will be used when showing again
+  * Fixed problem that drag drop was not allways placing items on correct spot
+  * Fixed problem that check box and radio button where not selectable
+  * For json editing now also codepress is used
+  * a label is now selectable from code tree
+  * Fixed problem with PHPFileControl not reloading directory
+  * Fixed error this.el not defined in firefox
+  * Changed seperator of required_js and required_css to ;
+  * Fixed when removing all properties of node also the node is removed
+  * Fixed redrawElement problem causing a blank screen to be shown
+  * Fixed problem in propertygrid that selectionboxes which where allowed to be customized could not be changed
+  * Fixed refresh is now using redraw instead of reloading config
+  * Fixed Before showing the preview window the designer is cleared, therefor no conflicts any more with same extjs ids
+  * Fixed the codetree was not cleared when last element removed
+  * When removing property undo information is created  
+  * Boolean editor is now selection correct value from list
+ 
+ Version 2.0.6:
+  + Added PHPFile control thanks to Epsylon
+  + index.php is added again to release, wraps index.html
+  * Fixed problem with null values in json causing error message (layout wizards)
+  * Fixed undo problem, changes made with grid could not be undone
+  * Cleaned duplicated values from the propertyselection list
+  * Drag element, pressing shift changes to clone mode
+  * JsonInit is removed from redraw to increase performance
+  * Made code override for Ext.FormPanel so it does not crash on a empty item list
+  - Moved ExtJs to seperate folder, so you can choose your version of extjs
+  - Cleaned old code from subversion
+  + Workarround for error in property grid throwing error variable k
+
+ Version 2.0.5:
+  * Fixed problem in CodePress and Designer with path
+  * Fixed load indicator in JsonPanel
+  * Delete of item with single element failed
+  * Fixed problem with required_js and required_css
+  
+ Version 2.0.4:
+  + Loading indicator
+  + Documentation window added under Question Mark
+  + Added loadConfig method for loading from URL
+  + Added autoLoad option in config to load json from URL
+  + Added Cookie files
+  - Remove debug message Created, for special scope objects
+  * Config is now shown in window
+  * Fixed layout problem
+  
+ Version 2.0.3-beta3:
+  * Fixed Empty designer will not show field anymore in code tree
+  * Changed the accordion to tabpanel
+  * Fixed problem that not all code parts where not shown
+  * Fixed problem that in IE the code words where not loaded
+ 
+ Version 2.0.2-beta2: 
+  * Added delete element as context menu
+  * Added Undo and Redo functions
+  * Added CodeTree
+  * Added "scope.<VAR>" in json object, so you can create local objects 
+  * Fixed Problem required_js in json was not loaded
+  * Fixed copy to clipboard did not work
+  * Fixed redraw problems for containers
+  * Fixed problems in editableJson code
+  
+ Version 2.0.0-beta1: 
+  * Complety rebuild as toolbox

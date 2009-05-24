@@ -1,0 +1,1142 @@
+/* @override 
+    http://mojomojo.org:3000/.static/mojomojo.css
+    http://localhost:3000/.static/mojomojo.css
+*/
+
+@import "reset.css";
+
+/* @group Document Structure */
+
+body {
+    background: #7D7C7A repeat-x url(gfx/background.jpg);
+    margin: 0;
+    color: #626262;
+    font: 85% Arial, Helvetica, Geneva, sans-serif;
+    text-align: center;
+}
+
+#container {
+    max-width: 960px;
+    text-align: left;
+    margin: 0 auto 0;
+}
+
+#header {
+    background: url(gfx/header.png);
+    height: auto;
+    padding-bottom: 0.1em;
+    margin: 0;
+}
+
+#header h1 {
+    top: 14px;
+    padding: 13px 0 10px 100px;
+    color: #ffffff;
+    font-weight: bold;
+    border-width: 1px;
+    border-color: #000;
+    margin: 0;
+}
+
+#header h1 a {
+    color: #ffffff;
+}
+
+#breadcrumbs {
+    background: #4E5662;
+    height: 12px;
+    font-size: .9em;
+    color: #e3e3e3;
+    margin: 0;
+    padding: 6px 8px;
+}
+#breadcrumbs a {
+    padding: 2px 7px;
+    color: white;
+    text-decoration: none;
+}
+#breadcrumbs a:hover {
+    color: #ffffff;
+    background-color: #7D7C7A;
+    text-decoration: none;
+    border: 1px solid #8d8c8a;
+    padding: 1px 6px;
+}
+
+div#toplinks {
+    font-size:.9em;
+    background: #ebeae7;
+    font-weight: bold;
+    color: #000000;
+    padding: 4px 8px;
+    min-height: 1.8em;
+}
+div#toplinks ul li, div#bottomnav ul li {
+    display: inline;
+}
+div#toplinks ul li a:hover, div#bottomnav ul li a:hover {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    padding: 2px 6px;
+    color:#333;
+    text-decoration:none;
+}
+div#toplinks ul li a,  div#bottomnav ul li a {
+    padding: 3px 7px;
+}
+div#pagenav {
+    font-size: .9em;
+    clear: both;
+    padding: 4px 15px;
+    background: #f6f6f6;
+    border-top: 1px solid #bbb;
+    border-bottom: 1px solid #bbb;
+}
+div#pagenav ul li {
+    padding: 2px 14px 2px 0;
+    display: inline;
+}
+div#pagenav ul li a {
+    text-decoration: none;  
+}
+div#pagenav ul li a:hover {
+    text-decoration: underline;
+}
+div#pageoptions {
+    padding: 5px 14px;
+    background-color: #ceebb6;
+}
+div#pageoptions ul li {
+    display: inline;
+    padding: 5px 14px 5px 0;
+    color: black;
+    font-size: 1.1em;
+}
+div#pageoptions a {
+    color: green;
+}
+#categories {
+    background: #ffffff;
+}
+
+#allPages {
+    float:left;
+    width:40%;
+    margin-right:20px;
+}
+
+#wantedPages {
+    float:left; 
+    width:55%;
+}
+.wantedBy { color:#999; }
+
+#tags {
+    background: #f6f6f6;
+    font-size: 1.1em;
+    color: #676767;
+    padding: 5px 13px;
+    border-top: 1px solid #bbb;
+    border-bottom: 1px solid #bbb;
+}
+
+.showdiv {
+    background: white;
+    font-size: 11px;
+    padding-left: 13px;
+    padding-bottom: 5px;
+    padding-top: 5px;
+    font-weight: bold;
+}
+
+#content {
+  overflow: hidden;
+    background: #ffffff;
+    padding: 13px;
+    overflow: hidden;
+}
+
+#content strong,b {
+  font-weight: bold;
+}
+
+#content em,i {
+  font-style: italic;
+}
+
+#content ul, #content ol {
+    padding-left:1.5em;
+}
+
+#content ul li { 
+    list-style: square;
+}
+
+#content ol li {
+  list-style: decimal;
+}
+
+#content li{
+    margin-left: 1.5em;
+    margin-bottom:5px;
+}
+
+#content li li {
+  font-size: 0.95em;
+}
+
+/* tables */
+
+#content table {
+    border-collapse: collapse;
+    border:2px solid #bbb;
+    background: #fff;
+    margin-bottom:.6em;
+}
+
+#content table td, #content table th {
+    border: 1px dotted #aaa;
+    padding: .5em;
+}
+
+#content table thead th, #content table tfoot th {
+    font-weight: bold;
+    background:#f6f6f6;
+}
+
+#content table tbody th, #content table tbody td {
+    vertical-align: top;
+    text-align: left;
+}
+
+#content table tfoot td {
+    border: 2px solid #000;
+}
+
+#content table tr.odd td, #content table tr.odd th {
+    background: #efefef;
+}
+
+#bottomnav {
+    background: #ebeae7;
+    padding: 6px 8px;
+    color: #000000;
+    margin: 0;
+    font-weight: bold;
+    min-height: 1.8em;
+    font-size: 0.9em;
+}
+
+#bottomnav input {
+    font-size: 1em;
+}
+
+.formdiv {
+    text-align: left;
+    background: #ffffff;
+    padding-left: 13px;
+    padding-bottom: 5px;
+}
+
+p {
+    line-height: 1.3em;
+    margin: 1.2em 0;
+}
+
+.hide { 
+    display: none;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.center,
+#content .center,
+#content table .center {
+    text-align: center;
+}
+
+/* @end */
+/* @group Headlines */
+
+.logintext {
+    font-weight:bold;
+    font-size:1.25em;
+    margin: 1em 0 1.5em 13px;
+}
+
+h1 {
+    font-size: 2.5em;
+}
+#content h1 {
+    margin-top:0;
+    font-size: 2em;
+}
+h2 {
+    font-size: 1.4em;
+}
+h3 {
+    font-size: 1.2em;
+}
+h4 {
+    font-size: 1.1em;
+}
+h5, h6 {
+    font-size: 1em;
+}
+
+/* @end */
+
+/* @group Links */
+
+a, a:visited { 
+    color: #2274A8;
+    text-decoration: underline;
+}
+
+#content a:visited { 
+    color: #4496ca;
+}
+
+a:hover, #content a:hover { 
+    color: #004276;
+}
+
+
+    
+/* @end */
+
+/* @group Navigation */
+
+form { margin: 0;}
+
+.navigation {
+  color: #999;
+}
+
+#navigationForm {
+  font-size : 12px;
+}
+
+div#toplinks ul li.navOn {
+  color: #3a3a3a;
+  background:#fff;
+  padding:2px 8px;
+  text-decoration: none;
+}
+
+.help {
+  font-size: 11px;
+}
+
+.inputBox {
+  font-size: 11px;
+  background-color: #eee;
+  padding: 5px;
+  margin-bottom: 20px;
+}
+
+blockquote {
+  display: block;
+  margin: 0px 0px 20px 0px;
+  padding: 0px 30px;
+  font-size:11px;
+  line-height:17px;
+  font-style: italic;  
+  width: 400px;
+}
+
+pre {
+  width:90%;
+  background-color: #eee;
+  padding: 10px;
+  margin-left: 3em;
+  margin-right:1em ;
+  font-size: 11px;
+  overflow: auto
+}
+
+ol.setup {
+  font-size: 19px;
+  font-family: georgia, verdana, sans-serif;
+  padding-left: 25px;
+}
+
+ol.setup li {
+  margin-bottom: 20px
+}
+
+.byline {
+  margin: 2em 0 0 0;
+  color: #999;
+  padding-left: 4px;
+  font-size: 11px;
+  text-align:right;
+}
+
+.references {
+  font-size: 10px;
+}
+
+p#message {
+ background: #eee; 
+ padding: 0.7em; 
+ border: 1px solid silver; 
+ margin: 1em 0;
+}
+
+#previewHeading {
+ clear:left;
+}
+
+div.preview {
+ clear:left;
+ max-width: 920px;
+ border:1px solid #ddd;
+ padding:5px;
+ overflow: auto; 
+ height: 250px;
+ margin:0 0 1em 0;
+}
+
+textarea#body {
+ height: 280px; 
+ max-width: 930px;
+ width: 100%;
+}
+
+textarea#comment {
+ height: 150px; 
+ width: 400px;
+}
+
+#hidden_info {
+  display:none ;
+  position:absolute;
+  z-index:1;
+}
+
+#TextileHelp,
+#MarkdownHelp
+{
+  width: 902px; 
+  background: #ddd; 
+  border: 1px solid #aaa;
+  padding:1em;
+}
+
+#MarkdownHelp table,
+#TextileHelp table {
+  margin-bottom: 0;
+}
+
+
+#MarkdownHelp table+h3,
+#TextileHelp table+h3 {
+  margin-top: 11px;
+}
+
+#MarkdownHelp table td,
+#TextileHelp table td {
+  font-size: 11px;
+  padding: 3px;
+  vertical-align: top;
+  border-top: 1px dotted #ccc;
+}
+
+#MarkdownHelp table td.arrow,
+#TextileHelp table td.arrow {
+  padding-right: 5px;
+  padding-left: 10px;
+  color: #999;
+}
+
+#MarkdownHelp table td.label,
+#TextileHelp table td.label {
+  font-weight: bold;
+  white-space: nowrap;
+  font-size: 10px;
+  padding-right: 15px;
+  color: #000;
+}
+
+#MarkdownHelp h3,
+#TextileHelp h3 {
+  font-size: 11px;
+  font-weight: bold;
+  font-weight: normal;
+  margin: 0 0 5px 0;
+  padding: 5px 0 0 0;
+}
+
+#TextileHelp h2 { margin-top:0; }
+
+#MarkdownHelp p,
+#TextileHelp p {
+  font-size: 10px;
+}
+
+.rightHandSide {
+  float: right;
+  width: 187px;
+  margin-left: 10px;
+  padding-left: 20px;
+  border-left: 1px dotted #ccc;
+}
+
+.rightHandSide p {
+  font-size: 10px;
+}
+ 
+.newsList {
+  margin-top: 20px;
+}
+
+.newsList p {
+  margin-bottom:30px;
+}
+
+.add a {
+  color: green;
+    font-size: 13px;
+  text-decoration: none;
+  vertical-align: middle;
+}
+
+.add a:hover {
+  color: #003800;
+    font-size: 13px;
+}
+a.tag {
+    text-decoration: none;
+}
+a.tag:hover {
+    text-decoration: underline;
+}
+.remove a {
+  color: red;
+  font-size: 1.1em;
+  margin: 0px 1px;
+  text-decoration: none;
+}
+
+.remove a:hover {
+    color: #650000;
+}
+
+.tagedit {
+  float: right;
+}
+
+#taginput {
+  width: 120px;
+}
+
+.newWikiWord {
+  color: #e33;
+  background: #fee;
+}
+
+.newWikiWord a {
+  vertical-align: super;
+  line-height: 0;
+  font-size: 0.8em;
+  font-weight:bold;
+  text-decoration:none;
+  color:#e33;
+  padding:0 2px;
+  margin:0 0 0 .1em;
+}
+#content .newWikiWord a:hover { 
+  background:#e33;
+  color:#fff;
+}
+
+.protoPage a:link {
+  color: #ab0b0b;
+}
+
+.protoPage a:visited { 
+  color: #666;
+}
+
+.protoPage a:hover {
+  color: #fff; 
+  background-color:#ab0b0b; 
+}
+    
+/* @end */
+
+/* @group Highlighted keywords in search */
+
+.quoted {
+  font-weight: bold;
+}
+    
+/* @end */
+
+/* @group Pagination Links */
+
+#content div.pager {
+    border:1px solid #eee;
+    padding:.25em;
+    text-align: center;
+    font-size:1.25em;
+}
+
+#content div.pager ul { 
+    list-style:none;
+    margin:0;
+    padding:0;
+    font-weight:bold;
+    list-style-position:inside;
+}
+
+#content div.pager .prev { margin:0; padding:0; float:left; }
+#content div.pager .next { margin:0; padding:0; float:right; }
+
+#content div.pager ul li { 
+    display:inline;
+    margin:0;
+    padding:0;
+}
+
+div.pager ul li a {
+    text-decoration:none;
+    padding:2px .25em;
+}
+#content div.pager ul li a:hover {
+    color:#fff;
+    background:#2274a8;
+}
+
+dl#pageInfoMeta {
+    float:right;
+    width:350px;
+    border-left:2px solid #ccc;
+    padding:0 0 0 1em;
+    font-family:Arial,Helvetica,sans-serif;
+}
+dl#pageInfoMeta dt { line-height:16px; width:150px; font-weight:bold; float:left; clear:left; margin:0;padding:0; }
+dl#pageInfoMeta dd { line-height:16px; width:200px; }
+
+dl#authors          { padding:0; margin:1.5em 0; }
+dl#authors dd,
+dl#authors dt { line-height:16px; }
+
+dl#authors dt { width:200px; }
+
+/* @end */
+
+/* @group Amazon Plugin */
+
+div.amazon {
+    width:80%;
+    padding-left: 2em;
+    margin: 1em 4em 1em 4em;
+    border: 1px solid #ccc;
+    background: #eee;
+}
+
+div.amazon img {
+    margin: 1.2em;
+}
+
+/* @end */
+/* @group Lists */
+
+table.recent {
+    width:100%;
+}
+table.recent .page          { width:50%; }
+table.recent .editedBy      { width:20%; }
+table.recent .timeEdited    { width:20%; }
+table.recent .actions       { width:10%; }
+
+/* @end */
+
+/* @group Diff */
+
+.diff {
+    margin-right:2em;
+    overflow: visible;
+    margin-top:1em;
+}
+
+.diffdel, del {
+  background: #fcc;
+  text-decoration: line-through;
+}
+
+.diffins, ins {
+  background: #cfc;
+}
+
+/* @end */
+
+.form dl {
+ margin: 13px;
+ float: left;
+}
+
+.form dt {
+  float: left;
+  width: 120px;
+  line-height: 24px;
+}
+
+.form dd {
+  margin: 0 0 5px 90px;
+  line-height: 24px;
+  margin-left: 80px;
+}
+
+span.statusmsg {
+  color: #335577;
+  margin-left: 1em;
+  font-size: 1.5em;
+}
+
+.login form input {
+  width: 120px;
+}
+
+.thumb {
+  border: none;
+}
+
+.addbutton {
+  margin-right: 0.5em;
+  background: white; 
+}
+
+.thumb {
+  background: #ddd;
+  padding: 8px;
+  margin: 8px;
+}
+
+.imageinfo {
+  float:right;
+  padding:0px;
+  margin:0px;
+  width: 150px;
+  min-height: 250px;
+}
+
+
+/* Transparent forms */
+
+input.dual,textarea.dual {
+    width: 500px;
+    border: 1px solid #fff;
+    margin:0.1em;
+    background: transparent;
+    vertical-align: top;
+}
+
+input.dual:focus, textarea.dual:focus {
+    border: 1px solid #000;
+}
+
+.dualbutton {
+    display:none;
+    margin:0.1em;
+}
+
+#title input,big {
+    font-size: 1.6em;
+}
+#description textarea,small {
+    font-size: 0.9em;
+}
+
+.framedpopup {
+ background: #eee; 
+ padding: 3px; 
+ border: 1px solid silver; 
+ width: 440px;
+}
+
+dl {
+ margin: 13px;
+ font-family: sans-serif;
+ clear: both;
+}
+
+#editlink {
+    float:right;
+    padding-right: 10em;
+}
+
+dt {
+  float: left;
+  width: 80px;
+  line-height: 24px;
+}
+
+dd {
+  margin: 0 0 5px 90px;
+  font-size: 11px;
+  line-height: 24px;
+  margin-left: 80px;
+}
+
+/* Common Forms Rules */
+
+.standard_form .fields label {
+  display: block;
+  clear: both;
+}
+.standard_form .fields label span {
+  text-align: right;
+  margin-right: .5em;
+}
+.standard_form .fields label span,
+.standard_form .fields label input {
+  display: block;
+  float: left;
+  margin-bottom: 1ex;
+}
+
+/* Role Form */
+.role_form .fields label span {
+  width: 6em;
+}
+
+.role_form #member_input {
+    width: 15em;
+}
+
+/* @group sidebar nav menu */
+
+/* code shamelessly stolen from Eric Meyer's http://meyerweb.com/eric/css/edge/menus/demo.html */
+/** with some slight modifications of colors, widths, etc. by Dave Naughton **/
+
+#sidebar ul {
+ padding: 0;
+ margin: 0;
+ border-bottom: 1px solid silver;
+ font: 1em sans-serif;
+}
+#sidebar ul li {
+ list-style-type: none;
+ border: 1px solid silver;
+ border-width: 1px 1px 0 3px;
+ position: relative;
+ margin: 0;
+ padding: 0;
+}
+#sidebar ul ul {display: none;}
+#sidebar ul li:hover > ul {
+ display: block;
+ position: absolute;
+ top: -1px;
+ left: 100%;
+}
+#sidebar li a {
+ display: block;
+ padding: 5px 7px;
+ text-decoration: none;
+ background: #FFF;
+}
+#sidebar li.menuParent, li.menuParentMissingChildren > a {
+ font-weight: bold;
+}
+
+#sidebar ul ul {width: 12em;}
+
+#sidebar {
+ position: absolute;
+ right: 0;
+ width: 10em;
+ margin: 0;
+ padding: 0;
+ font-family: Arial, sans-serif;
+}
+#sidebar > ul {
+ width: 11em;
+ margin-left: -1px;
+ font-size: 85%;
+}
+#sidebar ul {
+ border: 1px solid silver;
+ border-width: 0 0 0 1px;
+}
+#sidebar ul li {
+ border-width: 1px 0;
+ border-color: white;
+ padding: 0 0 0 5px;
+ line-height: 1.25em;
+}
+#sidebar ul ul {
+ border-width: 0 1px 1px 1px;
+ border-color: gray silver gray gray;
+}
+#sidebar ul ul li {
+ border-color: #FEFEFC;
+}
+#sidebar li > a {
+ background-color: transparent;
+ padding: 3px;
+}
+#sidebar li:hover {background-color: #ddf;}
+#sidebar li.menuParent:hover {
+ margin-left: -12.2em;
+ border: 1px solid gray;
+ background: #D7D6D4;
+}
+#sidebar li.menuParent:hover > a {
+ background: inherit;
+}
+#sidebar li.menuParent:hover > ul {
+ top: 1.75em;
+ left: -1px;
+ background: #FEFEFC;
+}
+
+ul#menuHome {
+ border-bottom: 1px solid silver;
+ font-weight: bold;
+}
+
+/* end of shamelessly stolen code */
+/* @end */
+
+.spinner {
+    float:right;
+    height:1em;
+}
+
+#editstatus {
+    color: red;
+}
+
+div.photo img{
+    margin: 1em;
+    padding:5px;
+    border:1px solid;border-color: #ccc #666 #666 #ccc
+}
+
+.end {
+    clear:both;
+}
+
+
+.inline p,.inline dt,.inline dd{
+    font-size: 0.8em;
+    width: auto;
+}
+
+acronym {
+  border-bottom: 1px dotted !important;
+}
+
+.inplaceeditor-form input {
+    margin: 0px 10px 0px 0px;
+}
+
+.inplaceeditor-form a {
+    border: 1px solid black;
+    background: #eee;
+    padding: 5px 6px 1px 6px;
+    margin: 0px 0px 0px 0px;
+    text-decoration: none;
+}
+
+#title { 
+    margin-left: 1em;
+}
+
+#description {
+    font-style: italic;
+    margin-left: 2em;
+}
+
+#content img.right {
+    margin-left: 1em;
+}
+
+#searchField {
+    padding: 3px;
+    font-size: 1em;
+    border: 1px solid #bbb;
+    margin-left: 10px;
+}
+fieldset {
+    padding: 1em;
+}
+
+fieldset .button,
+fieldset .checkbox,
+fieldset .contentbutton,
+fieldset .file,
+fieldset .image,
+fieldset .multi,
+fieldset .password,
+fieldset .radio,
+fieldset .reset,
+fieldset .select,
+fieldset .submit,
+fieldset .text,
+fieldset .textarea
+{
+    display: block;
+    clear: left;
+    border: 0;
+    margin: 1px;
+    /* when no label */
+    margin-left: 12em;
+}
+
+fieldset .button.label,
+fieldset .checkbox.label,
+fieldset .contentbutton.label,
+fieldset .file.label,
+fieldset .image.label,
+fieldset .multi.label,
+fieldset .password.label,
+fieldset .radio.label,
+fieldset .reset.label,
+fieldset .select.label,
+fieldset .submit.label,
+fieldset .text.label,
+fieldset .textarea.label
+{
+    margin-left: 1px;
+}
+
+fieldset .error.label {
+    /* border + margin swap values with above, to ensure rows align */
+    border: 1px #fff;
+    margin: 0;
+}
+
+fieldset .error_message {
+       display: block;
+       color: #ff0000;
+}
+
+fieldset .label .error_message {
+       /* padding-left eq label width + padding-right */
+       padding-left: 12em;
+}
+
+fieldset .button label,
+fieldset .contentbutton label,
+fieldset .checkbox label,
+fieldset .file label,
+fieldset .image label,
+fieldset .multi label,
+fieldset .password label,
+fieldset .radio label,
+fieldset .radiogroup label,
+fieldset .select label,
+fieldset .text label,
+fieldset .textarea label
+{
+    display: inline;
+    float: left;
+    width: 11em;
+    text-align: right;
+    padding: 4px 1em 0 0;
+    margin:0 0 1.5em 0;
+}
+
+fieldset .radiogroup span label {
+    /* undo the above style */
+    float: none;
+    width: auto;
+    text-align: left;
+    padding-right: 0;
+}
+
+fieldset .multi .elements {
+    display: block;
+    float: left;
+}
+
+fieldset .multi .elements label {
+    display: block;
+    width: auto;
+    padding-right: 0.25em;
+}
+
+fieldset .multi input,
+fieldset .multi select {
+    display: block;
+    float: left;
+    margin-right: 0.5em;
+}
+
+fieldset.checkboxgroup,
+fieldset.radiogroup
+{
+    margin: 0;
+    margin-left: 12em;
+    padding: 0;
+    width: auto;
+}
+
+fieldset.radiogroup.label {
+    border: 0;
+    margin-left: 0em;
+}
+
+fieldset .comment .comment {
+    /* when no label */
+    display: block;
+    margin-left: 0em;
+}
+
+fieldset .label .comment {
+    display: block;
+    margin-left: 12em;
+}
+
+
+#powered {
+    float:right;
+    clear:both;
+    margin:1em 0 0 0;
+}
+
+dl.list { 
+    font-size:14px;
+    font-family:Arial,Helvetica,sans-serif;
+}
+dl.list dt { 
+    font-weight:bold; 
+    width:15em; 
+}
+
+div#tags { height:4em; }
+
+div#tags dl { margin:0; padding:0; font-family: Arial,Helvetica,sans-serif; }
+div#tags dt { width:120px; clear:left; margin:0; padding:0; font-size:.8em; font-weight:bold; }
+div#tags dd { margin:0; padding:0; }
+
+div#bottomnav { clear:both; }
+
+#revision_info { background:#ffa; padding:.25em .5em; color:#f60; font-size:1.1em; float:right;  }
+
+.attachment {
+    background: #eee; 
+    padding: 3px;
+    border: 1px solid silver;
+    width:640px
+}
+
+#progressbar {
+    display:none;
+	height: 18px;
+	background-color: grey;
+	margin: 10px 0;
+}
+#progressbar #progress {
+	width: 0%;
+	height: 18px;
+	background-color: white;
+	color: black;
+}

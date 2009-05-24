@@ -1,0 +1,28 @@
+<%args>
+	$title => '',
+	$url => '/html/blank.html'
+</%args>
+function(){ 
+		var myTabPanel = Ext.getCmp('main-panel');
+		Ext.Ajax.request({
+			url: '<% $url %>'
+			success: function(xhr) {
+				var comp = eval(xhr.responseText);
+				var tab = comp.add(newComponent);
+				tab.title( '<% $title %>' );
+				comp.setActiveTab(newComponent);
+			},
+			failure: function(xhr) {
+				var win = new Ext.Window({ 
+					 layout: 'fit',
+					 autoScroll: true,
+					 title: '<% $title %> create failed',
+					 height: 600,
+					 width: 600,
+					 html: 'Server communication failure:' + xhr.responseText });
+				win.show();
+				//var south = Ext.getCmp('south-panel');
+				//new Ext.Panel({ renderTo: 'south-div', html: xhr.responseText });
+			}
+		});
+};

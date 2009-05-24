@@ -1,0 +1,9 @@
+<& /site/header.html, "main=0" &>
+
+<script type="text/JavaScript">
+Ext.onReady(function(){
+	Baseliner.addNewTabComp( "/scm/form_render" , "<% $c->req->params->{PACKAGE_NAME} %>" )
+});
+</script>
+
+</body>

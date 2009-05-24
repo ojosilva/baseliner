@@ -1,0 +1,19 @@
+<%perl>
+	my $p = $c->req->params;
+	(  my $table = $p->{dbtable} )=~ s/(_|^)(.)/\U$2/g;
+	my $formobjid = $p->{formobjid};
+ 	my $form = $c->model( 'Harvest::' . $table )->search({ formobjid=>$formobjid })->first;
+	delete $p->{$_} for( qw/dbtable formobjid formname id name numtabs/ );
+	warn Dump $p;
+	eval {
+		#$c->model( 'Harvest' )->storage->dbh_do( sub { $_[1]->do( "alter session set nls_date_format = 'DD/MM/YYYY' "); });
+		$form->update( $p );
+	};
+	if( $@ ) {
+		warn $@;
+		print 'false';
+	} else {
+		print 'true';
+	}
+	 #warn Dump $form->formobjid;
+</%perl>

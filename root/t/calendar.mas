@@ -1,0 +1,255 @@
+﻿<%init>
+
+	
+our @week = qw/MON TUE WED THU FRI SAT SUN/;
+#$c->stash->{weekdays} = 
+
+sub inside_window {
+	my ($start,$end,$hour)=@_;
+	if( $start && $end && $hour ) {
+		##$start = hour_to_int($start);
+		#$end = hour_to_int($end);
+		#$hour = hour_to_int($hour);
+		return ( $hour>=$start && $hour<$end );
+	} else {
+		return 0;
+	}
+}
+
+sub get_window {
+	my ($day, $hour)=@_;
+	my $rs = $c->model('balicalendar')->search({ day=>$day });
+	while( my $win = $rs->next ) {
+		if( inside_window($win->start,$win->end,$hour) ) {
+			return {  
+				type=> $win->type,
+				active=> $win->active,
+				id=> $win->id,
+				day=> $win->day,
+				start=> $win->start,
+				end=> $win->end,
+			}
+		}
+	}
+	return {};
+}
+
+</%init>
+<HTML>
+<HEAD>
+<META http-equiv="Content-Language" content="es">
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<META name="GENERATOR" content="Microsoft FrontPage 4.0">
+<META name="ProgId" content="FrontPage.Editor.Document">
+<TITLE>Ventanas Horarias de Pase</TITLE>
+<LINK rel="stylesheet" type="text/css" href="<% $c->uri_for('/t/calendar.css') %>">
+<script language="JavaScript" src="comun/funciones.js"></script>
+<script language="JavaScript">
+	function goModificar() {
+		document.infForm.action="/job/calendar_edit";
+		document.infForm.submit();
+	}
+	function editSlot(dia,ini,fin) {
+		window.open("/job/calendar_edit?dia=" + dia + "&ini=" + ini + "&fin=" + fin,
+				 "ventana_edit",
+ 				"height=220, width=380, left=400, top=300, location=no, menubar=no, "
+				+ "resizable=no, scrollbars=no, status=no, toolbar=no");
+	}
+	function editId(id) {
+		window.open("/job/calendar_edit?id=" + id,
+				 "ventana_edit",
+ 				"height=220, width=380, left=400, top=300, location=no, menubar=no, "
+				+ "resizable=no, scrollbars=no, status=no, toolbar=no");
+	}
+</script>
+<style>
+	td.normal { background-color: #70E080; }
+	td.urgente { background-color: #F08080; }
+	td.nopase { background-color: #D0D0D0; }
+	td.normalHover { background-color: #80C080; }
+	td.urgenteHover { background-color: #C08080; }
+	td.nopaseHover { background-color: #B0B0B0; }
+	td.normalDes { background-color: #A0B0A0; }
+	td.urgenteDes { background-color: #B0A0A0; }
+	td.nopaseDes { background-color: #E0E0E0; }
+	td.normalDesHover { background-color: #80C080; }
+	td.urgenteDesHover { background-color: #C08080; }
+	td.nopaseDesHover { background-color: #B0B0B0; }
+</style>
+</HEAD>
+
+<BODY onload="">
+<jsp:include page="comun/title.jsp" flush="true"/>
+<TABLE cellpadding=0 cellspacing=0 border=0 width="100%">
+<TR><TD>&nbsp;</TD><TD></TD></TR>
+<TR><TD><H4>Ventanas Horarias de Pase a Producción</H4></TD>
+</TR>
+<TR>
+<TD>
+</TD>
+</TR>
+</TABLE>
+
+<%doc>
+		InfVentana iv = new InfVentana();
+		if( !iv.loadVentanas(conn) ) {
+			//no hay ventanas - creo una por lo menos pa que se visualice el grid
+			iv.addVentana("LUN","00:00","24:00","X","-1","1");
+		}
+
+</%doc>
+<DIV style="overflow:auto; height:70%; border-top:0; border-color:maroon; border-left:0; border-right:0; border-bottom:2;border-color:maroon; border-style:solid; background-color:" class=scrollchulo>
+<FORM name="infForm" action="" method="GET">
+<%perl>
+
+		my ( $lastctipo, $ctipo ) = 0;
+		my $lastid=-1;
+		my ( $active, $lastactive, $ktipos, $rowspan ) = 0;
+		my $grid = {};
+		foreach my $dd ( 0..6 ) {
+			my $row = 0;
+			my $rowspan=0;
+			my  $lastHora="00:00";
+			my $hora="";
+			foreach my $hh ( 0..23 ) {
+				for(my $mm=0; $mm<60; $mm+=30) {
+					last if( $hh>=24 && $mm>0 );
+					$hora = sprintf("%02d:%02d", $hh, $mm);
+					my $ven = get_window( $dd, $hora );
+					my $id = -1;
+					$ctipo='X';
+					$active=0;
+					if($ven) {  
+						$ctipo = $ven->{type};
+						$id = $ven->{id};
+						$active = $ven->{active};
+					}
+					if( $lastctipo ne $ctipo ) {
+						if( $ktipos!=0 ) {
+							my $clase = ($lastctipo eq 'N'?"normal":($lastctipo eq 'U'?"urgente":"nopase"));
+							$clase .= $lastactive?"":"Des";
+							my $data = { day=>$dd, id=>$lastid, class=>$clase, rowspan=>"$rowspan", type=>$lastctipo, lasthour=>$lastHora, hour=>$hora };
+							my $rowfinal = $row-$rowspan;
+							$grid->{$dd}->{ $rowfinal } = $data;
+							$rowspan=0;
+						}
+						$lastctipo=$ctipo;
+						$lastid=$id;
+						$lastactive=$active;
+						$lastHora=$hora; 
+						$ktipos++;
+					}
+					$rowspan++; #cuenta cuantas filas han pasado, para el rowspan
+					$row++;
+				}
+			}
+			unless( $lastHora eq "24:00" ) {
+				my $clase = ($lastctipo eq 'N' ? "normal":($lastctipo eq 'U'?"urgente":"nopase"));
+				$clase .= $lastactive?'':'Des';
+				my $data = { day=>$dd, id=>$lastid, class=>$clase, rowspan=>$rowspan, type=>$lastctipo, lasthour=>$lastHora, hour=>"24:00" };
+				my $rowfinal = $row-$rowspan;
+				$grid->{$dd}->{ $rowfinal } = $data;
+			}
+		} #"
+</%perl>
+
+	<TABLE>
+		<TR><TD>&nbsp;</TD>
+% foreach my $dd ( @week ) {
+			<TH width='100'><% $dd %></TH>
+% }
+		</TR>
+<%perl>
+	##my $grid = $c->stash->{grid};
+	for my $row ( 0..47 ) {
+		print "<TR style='height:3px;'><td rowspan=1></td>";
+		foreach my $dd ( 0..6 ) {
+			my $d = $grid->{$dd}->{$row};	
+			next unless ref $d;
+			print qq{<TD style='cursor:hand' };
+			print qq{	rowspan=$d->{rowspan} };
+			print qq{   onmouseover='javascript:this.className="$d->{class}Hover";' 
+						onmouseout='javascript:this.className="$d->{class}";' 
+						align=center CLASS='$d->{class}' 
+			};
+			if( $d->{type} eq 'X' ) {
+				print qq{ onclick='javascript:editSlot("$d->{day}","$d->{lasthour}","$d->{hour}")'>};
+			} else {
+				print qq{ onclick='javascript:editId("$d->{id}")'>};
+			}	
+			print "$d->{lasthour} - $d->{hour}</TD>";						
+		}
+		print "</TR>";
+	}
+</%perl>
+	</TABLE>
+
+</FORM>
+</DIV>
+<TABLE border="0" width="100%" cellpadding="2">
+<TR>
+<TR>
+<TD align="left">
+	<TABLE><TR>
+		<TD><B>Leyenda: </B>
+		<TD width=20>
+		<TD class="normal" width=15>
+		<TD>Ventana Normal
+		<TD width=15>
+		<TD class="urgente" width=15>
+		<TD>Ventana Urgente
+		<TD width=15>
+		<TD class="nopase" width=15>
+		<TD>No hay pases
+	</TR></TABLE>
+</TD>
+</TR>
+<TR>
+<TD align="left">
+	<TABLE><TR>
+		<TD><B>Leyenda: </B>
+		<TD width=20>
+		<TD class="normalDes" width=15>
+		<TD>Normal Inactiva
+		<TD width=15>
+		<TD class="urgenteDes" width=15>
+		<TD>Urgente Inactiva
+	</TR></TABLE>
+</TD>
+</TR>
+<TD align="right">
+<INPUT TYPE=BUTTON onclick="history.back()" VALUE="Aceptar" CLASS="boton"></INPUT>
+</TD>
+</TR>
+</TABLE>
+<%doc>
+        
+    }
+    catch(SQLException e) {
+        try { out.println( e.getMessage());  } catch(Exception e1) {};
+        e.printStackTrace();
+    }
+    catch(Exception ex) {
+        try { out.println( ex.getMessage());  } catch(Exception e1) {};
+        ex.printStackTrace();
+    }
+	finally {
+	    // Always make sure result sets and statements are closed,
+	    // and the connection is returned to the pool
+	    if (rs != null) {
+	      try { rs.close(); } catch (SQLException e) { ; }
+	      rs = null;
+	    }
+	    if (stmt != null) {
+	      try { stmt.close(); } catch (SQLException e) { ; }
+	      stmt = null;
+	    }
+	    if (conn != null) {
+	      try { conn.close(); } catch (SQLException e) { ; }
+	      conn = null;
+	    }
+	}    
+</%doc>
+</BODY>
+</HTML>
+

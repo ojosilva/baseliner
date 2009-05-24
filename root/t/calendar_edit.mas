@@ -1,0 +1,369 @@
+<%args>
+	$id => ''  
+	$pdia => ''
+	$pini => ''
+	$pfin => ''
+	$cmd => ''
+	$ven_dia => ''
+	$ven_ini => ''
+	$ven_fin => ''
+	$ven_tipo => ''
+</%args>
+<%init>
+
+	
+our @week = qw/MON TUE WED THU FRI SAT SUN/;
+#$c->stash->{weekdays} = 
+
+sub inside_window {
+	my ($start,$end,$hour)=@_;
+	if( $start && $end && $hour ) {
+		##$start = hour_to_int($start);
+		#$end = hour_to_int($end);
+		#$hour = hour_to_int($hour);
+		return ( $hour>=$start && $hour<$end );
+	} else {
+		return 0;
+	}
+}
+
+sub get_window {
+	my ($day, $hour)=@_;
+	my $rs = $c->model('balicalendar')->search({ day=>$day });
+	while( my $win = $rs->next ) {
+		if( inside_window($win->start,$win->end,$hour) ) {
+			return {  
+				type=> $win->type,
+				active=> $win->active,
+				id=> $win->id,
+				day=> $win->day,
+				start=> $win->start,
+				end=> $win->end,
+			}
+		}
+	}
+	return '';
+}
+
+
+sub colindantes() {
+		#esta query saca sólo las ventanas con colindantes
+		#$SQL = " SELECT ID,ven_ini,ven_fin,ven_dia,ven_tipo "
+		#	+  "   FROM DISTVENTANAS dv"
+		#	+  "  WHERE EXISTS( SELECT * FROM DISTVENTANAS dv2  "
+		#	+  "    WHERE (dv.ven_fin=dv2.ven_ini OR dv.ven_ini=dv2.ven_fin) AND dv.ven_tipo=dv2.ven_tipo AND dv.ven_dia=dv2.ven_dia )"
+		#	+  "  ORDER BY DECODE(ven_dia,'LUN',1,'MAR',2,'MIE',3,'JUE',4,'VIE',5,'SAB',6,'DOM',7,8), ven_ini ";
+		my $rs = $c->model('balicalendar')->all;
+		while( my $row = $rs->next )  {
+			my $rs2 = $c->model('balicalendar')->search({ -or => { end=>$row->start, start=>$row->end }, type=>$row->type, day=>$row->day });
+			while( my $row2 = $rs2->next ) {
+				$cc{ $row2->id } = {};
+			}
+
+		}
+		if( rs.next() ) {
+			my ($lastdia,$lasttipo,$realfin,$realini,$realid);
+			my @vecId;
+			do {
+				$id = rs.getString("id");
+				$ini = rs.getString("ven_ini");
+				$fin = rs.getString("ven_fin");
+				$day = rs.getString("ven_dia");
+				$type = rs.getString("ven_tipo");
+				if( ($lastdia eq $dia) && ($lasttipo eq $tipo) ) { #colindan
+					$realfin=$fin;
+					push @vecId, $id;
+				}
+				else {
+					if( $realfin ) {  #hay colindantes
+						deleteVentanas(@vecId);	#borro las que sobran
+						updateVentana($realid,$realini,$realfin); #actualizo a la buena
+						loadVentanas(); #reinicio del vector global de ventanas en memoria
+					}
+					$lastdia=dia;
+					$lasttipo=tipo;
+					$realid=id;
+					$realini=ini;
+					$realfin='';
+					@vecId=();
+				}
+			}  while (rs.next());
+			if( $realfin ) {  #hay colindantes
+				#deleteVentanas(conn,vecId);	#borro las que sobran
+				#updateVentana(conn,realid,realini,realfin); #actualizo a la buena
+				#loadVentanas(conn); #reinicio del vector global de ventanas en memoria
+			}
+			return 1;
+		}
+		return 0;
+	}
+	catch(Exception e) {
+		throw new Exception("colindantes():Error:"+e.getMessage());
+	}
+}
+
+</%init>
+<HTML>
+<HEAD>
+<META http-equiv="Content-Language" content="es">
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<TITLE>Ventana Horaria</TITLE>
+<LINK rel="stylesheet" type="text/css" href="<% $c->uri_for('/t/calendar.css') %>">
+<script language="JavaScript" src="comun/funciones.js"></script>
+<script language="JavaScript">
+	function goModificar(cmd) {
+		var ini = infForm.ven_ini.value.substring(0,2) + infForm.ven_ini.value.substring(3,5);
+		var fin = infForm.ven_fin.value.substring(0,2) + infForm.ven_fin.value.substring(3,5);
+		if( ini >= fin ) {
+			alert("Error: hora fin es igual o superior a la hora de inicio.");
+			return false;
+		}
+		if( cmd=="B" && infForm.ven_tipo.value=="X" ) {
+			alert("Aviso: las ventanas cerradas no necesitan borrarse.")
+			return false;
+		}
+		infForm.cmd.value=cmd;
+		document.infForm.action="/job/calendar_edit";
+		document.infForm.submit();
+	}
+	function checkBorrar(opt) {	//si se cierra una ventana, quitamos el botón borrar
+		document.all.botonBorrar.style.visibility="hidden";
+	}
+</script>
+<style>
+	select {
+		width: 160px;
+	}
+</style>
+</HEAD>
+
+<BODY onload="">
+
+% my $activa = 0;
+% my $cierra = 0; 
+% if( $cmd ) {
+
+<TABLE height="100%" width="100%">
+<TR><TD align=left >
+<%perl>
+		my @lvDias = qw/LUN MAR MIE JUE VIE/;
+		my @ldDias = qw/LUN MAR MIE JUE VIE SAB DOM/;
+		my @diaList;
+		if( $ven_dia eq "L-V" ) {
+			my @diaList=@lvDias;
+		} elsif( $ven_dia eq "L-D" ) {
+			my @diaList=@ldDias;
+		} else {
+			push @diaList, $ven_dia;
+		}
+		foreach my $ven_dia ( @diaList ) {
+			if( $cmd eq "B" ) {
+				#delete row
+				if( $id ) {
+					$c->model('balicalendar')->delete({ id=>$id });
+					#stmt.executeUpdate("DELETE FROM distventanas WHERE id=" + id);
+					$cierra=1;
+				} else {
+					print("<H5>Error: id '$id' de ventana no encontrado.</H5>"); 
+				}
+			}
+			elsif( $cmd eq "A" ) {
+				#InfVentana.Ventana ven=iv.getVentanaRec(ven_dia,ven_ini);
+				my $ven = get_window( $ven_dia, $ven_ini );
+
+				if( ref $ven && !($id eq $ven->{id}) && !("X" eq $ven->{tipo}) && !($ven_ini eq $ven->{fin}) ) {
+					#Inicio está en una ventana ya existente
+					print("<h5>Error: la hora de inicio de ventana ($ven_ini) se solapa con la siguiente ventana:<br>"
+							. "<li>DIA=".$ven->{dia}. "<li>INICIO=".$ven->{start}
+							."<li>FIN=". $ven->{fin} . "<li>TIPO=".$ven->{tipo} . " </h5>"); 
+				} else {
+					#ven=iv.getVentanaRec(ven_dia,ven_fin);
+					$ven = get_window( $ven_dia, $ven_ini );
+
+					if( $ven && !($id eq $ven->{id}) && !("X" eq $ven->{tipo}) && !($ven_fin eq $ven->{start}) ) { 
+						#Fin está en una ventana ya existente
+						print("<h5>Error: la hora de fin de ventana ($ven_fin) se solapa con la siguiente ventana: "
+							. "<li>DIA=".$ven->{dia}. "<li>INICIO=".$ven->{start}
+							."<li>FIN=". $ven->{fin} . "<li>TIPO=".$ven->{tipo} . " </h5>"); 
+					} else {			
+
+						unless( $id ) {  #new row
+							$c->model('balicalendar')->create({ day=>$ven_dia, type=>$ven_tipo, start=>$ven_ini, end=>$ven_fin });
+							#String SQL="INSERT INTO distventanas( id,ven_dia,ven_tipo,ven_ini,ven_fin) " 
+							#			. "VALUES (distventanaseq.nextval,'"+ven_dia+"','"+ven_tipo+"','"+ven_ini+"','"+ven_fin+"') ";
+						} else {  #existing
+							my $row = $c->model('balicalendar')->search({ id=>$id })->first;
+							$row->day( $ven_dia );
+							$row->type( $ven_tipo );
+							$row->start( $ven_ini );
+							$row->end( $ven_fin );
+							$row->update;
+							#String SQL = "UPDATE distventanas "
+							#		. " SET ven_dia='"+ven_dia+"',ven_tipo='"+ven_tipo+"' "
+							#		. " ,ven_ini='"+ven_ini+"',ven_fin='"+ven_fin+"' WHERE id=" + id;
+						}
+
+						##colindantes();
+						$cierra=1;
+					}
+				}
+			} elsif( $cmd eq "1" || $cmd eq "0" ) {
+				#Activar
+				#stmt.executeUpdate("UPDATE distventanas " + " SET ven_activa='"+cmd+"' WHERE id=" + id); 
+				my $row = $c->model('balicalendar')->search({ id=>$id });
+				$row->activa( $cmd );
+				$row->update;
+				$cierra=1;
+			} else {
+				print("<h5>Error: Comando desconocido o incompleto.</h5>");
+			}
+
+			last unless( $cierra )
+		}
+
+		if( $cierra ) {
+			print("<SCRIPT>\nwindow.opener.location.reload();\nwindow.close();\n</SCRIPT>");
+		}
+</%perl>
+</TD></TR>
+<TR><TD align=center valign=center>
+<INPUT TYPE=BUTTON onclick="history.back()" VALUE="< Atrás" CLASS="boton"></INPUT>
+<INPUT TYPE=BUTTON onclick="window.close()" VALUE="Cancelar" CLASS="boton"></INPUT>
+</TD></TR>
+</TABLE>
+% } else { ## Edit Window
+<TABLE cellpadding=0 cellspacing=0 border=0 width="100%">
+<TR><TD>&nbsp;</TD><TD></TD></TR>
+<TR><TD><H4>
+	<% $id ? 'Nueva Ventana' : 'Modificar Ventana' %>
+</H4></TD>
+</TR>
+<TR>
+<TD>
+</TD>
+</TR>
+</TABLE>
+
+% my $win = $c->model('balicalendar')->search({ id=>$id })->first;
+
+<DIV style="overflow:auto; height:60%; border-top:0; border-color:maroon; border-left:0; border-right:0; border-bottom:2;border-color:maroon; border-style:solid; background-color:" class=scrollchulo>
+<FORM name="infForm" action="" method="GET">
+      <TABLE style="table-layout:fixed; width:100%;" border="0" cellpadding="2" cellspacing=1 ID="tabVar">
+ 		<col width=125 />  
+		<col width="100%"/>
+		<col/>
+% if (!$win && !$pdia ) {
+        <TR>
+          <TD class="impar" colspan="2"><B>Ventana con ID=<% $id %> no existe.</TD>
+        </TR>
+      </TABLE>
+<%perl>
+        } else {
+            my $sColor = "impar";
+			my $cnt = 0;
+            my $inicio;
+			my $fin;
+			my $dia;
+            my $tipo;
+			if( $pdia ) {
+				$inicio=$pini;
+				$fin=$pfin;
+				$dia=diaToString($pdia);
+				$tipo="N";
+			} else {
+	            $inicio = $win->start;
+				$fin = $win->end;
+				$dia = $win->day;
+	            $tipo = $win->type;
+	            $activa = $win->active;
+			}
+</%perl>				
+        <TR>
+	      <TH>Día</TH>
+			<TD class="<% $sColor%>" >
+				<SELECT NAME="ven_dia" style="font-weight:bold;">
+					<OPTION VALUE="LUN" <% ($dia eq 'LUN' ?'SELECTED':'') %>>Lunes</OPTION>
+					<OPTION VALUE="MAR" <% ($dia eq 'LUN' ?'SELECTED':'') %>>Martes</OPTION>
+					<OPTION VALUE="MIE" <% ($dia eq 'LUN' ?'SELECTED':'') %>>Miércoles</OPTION>
+					<OPTION VALUE="JUE" <% ($dia eq 'LUN' ?'SELECTED':'') %>>Jueves</OPTION>
+					<OPTION VALUE="VIE" <% ($dia eq 'LUN' ?'SELECTED':'') %>>Viernes</OPTION>
+					<OPTION VALUE="SAB" <% ($dia eq 'LUN' ?'SELECTED':'') %>>Sábado</OPTION>
+					<OPTION VALUE="DOM" <% ($dia eq 'LUN' ?'SELECTED':'') %>>Domingo</OPTION>
+% unless($id) {  #si es nuevo, se permiten rangos 
+					<OPTION VALUE="L-V" >De Lunes a Viernes</OPTION>
+					<OPTION VALUE="L-D" >De Lunes a Domingo</OPTION>
+% }
+				</SELECT>
+			</TD>
+		</TR>
+		<TR>
+          <TH>Tipo</TH>
+			<TD class="<% $sColor%>">
+				<SELECT NAME="ven_tipo" style="font-weight:bold;">
+					<OPTION VALUE="N" style="color:green;" <% $tipo eq 'N' ?'SELECTED':'' %>>Normal</OPTION>
+					<OPTION VALUE="U" style="color:red;" <% $tipo eq 'U' ?'SELECTED':'' %>>Urgente</OPTION>
+				</SELECT>
+			</TD>
+		</TR>
+		<TR>
+		  <TH>Hora Inicio</TH>
+			<TD class="<% $sColor%>" >
+				<SELECT NAME="ven_ini"> 
+<%perl>
+				for(my $hh=0; $hh<=23; $hh++) {
+					for(my $mm=0; $mm<59; $mm+=30) {
+						my $hora = sprintf("%02d:%02d", $hh, $mm);
+						my $hora_corta = sprintf("%d:%02d", $hh, $mm);
+						print("<OPTION VALUE='$hora' " . ($inicio eq $hora ?'SELECTED':'') . '>' . $hora_corta . '</OPTION>');
+					}
+				}
+</%perl>
+				</SELECT>
+			</TD>
+		</TR>
+		<TR>
+          <TH>Hora Fin</TH>
+			<TD class="<% $sColor %>" align="left">
+				<SELECT NAME="ven_fin">
+<%perl>
+				for(my $hh=0; $hh<=24; $hh++) {
+					for(my $mm=0; $mm<59; $mm+=30) {
+						last if( $hh==24 && $mm==30 );
+						my $hora = sprintf("%02d:%02d", $hh, $mm);
+						my $hora_corta = sprintf("%d:%02d", $hh, $mm);
+						print("<OPTION VALUE='$hora' " . ($fin eq $hora ?'SELECTED':'') . '>' . $hora_corta . '</OPTION>');
+					}
+				}
+</%perl>
+				</SELECT>
+			</TD>
+        </TR>
+      </TABLE>
+% if( $id ) {
+<INPUT TYPE=HIDDEN NAME="id" VALUE="<% $id %>" />
+% }
+<INPUT TYPE=HIDDEN NAME="cmd" VALUE="" />
+</FORM>
+</DIV>
+<TABLE border="0" width="100%" cellpadding="2">
+<TR>
+<TR>
+<TD align="right">
+<INPUT TYPE=BUTTON onclick="goModificar('A')" VALUE="Aceptar" CLASS="boton"></INPUT>
+% unless( $pdia ) { #las ventanas cerradas no se borran 
+<INPUT TYPE=BUTTON ID="botonBorrar" onclick="goModificar('B')" VALUE="Borrar" CLASS="boton"></INPUT>
+%   if( $activa ) {
+		<INPUT TYPE=BUTTON ID="botonDesactivar" onclick="goModificar('0')" VALUE="Desactivar" CLASS="boton"></INPUT>
+%   } else { 
+		<INPUT TYPE=BUTTON ID="botonActivar" onclick="goModificar('1')" VALUE="Activar" CLASS="boton"></INPUT>
+% 	} 
+% }
+<INPUT TYPE=BUTTON onclick="window.close()" VALUE="Cancelar" CLASS="boton"></INPUT>
+</TD>
+</TR>
+</TABLE>
+% 	}
+%  } #if cmd
+</BODY>
+</HTML>
+

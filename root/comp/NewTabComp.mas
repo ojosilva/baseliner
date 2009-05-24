@@ -1,0 +1,9 @@
+%# This component can be used from a Controller to create a new tab
+<& /site/header.html, "main=0" &>
+<script type="text/JavaScript">
+Ext.onReady(function(){
+	Baseliner.addNewTabComp(  "<% $c->stash->{url} %>" , "<% $c->stash->{title} %>" )
+});
+</script>
+
+</body>

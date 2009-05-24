@@ -1,0 +1,67 @@
+.typeBoolTrue {
+  color:green;
+}
+.typeBoolFalse {
+  color:red;
+}
+.typeObject {
+  color: blue;
+  font-style: italic;
+}
+
+.selectedElementParent *, .selectedElementParent {
+  background:#ccf;
+}
+.selectedElement *, .selectedElement {
+  background:#ffc;
+}
+
+.resizeLayer {
+ background:#ffc;
+ text-align:center;
+ font:bold 10px arial;
+ overflow:hidden;
+}
+
+.x-form-field-wrap .x-form-codefield-trigger {background-image: url(../icons/codefield-trigger.png);cursor:pointer;}
+
+.text-scripteditor {float:left;font:normal 12px arial}                    
+.icon-scripteditor {background-image: url(../icons/layout_edit.png) !important;
+                    background-repeat: no-repeat;float:left;width:20px;height:20px;}
+.icon-layoutEdit { background-image:url(../icons/layout_edit.png) !important; }
+.icon-reset { background-image:url(../icons/asterisk_orange.png) !important; }
+.icon-time { background-image:url(../icons/time.png) !important; }
+.icon-show { background-image:url(../icons/television.png) !important; }
+.icon-delete { background-image:url(../icons/delete.png) !important; }
+.icon-add { background-image:url(../icons/add.png) !important; }
+.icon-help { background-image:url(../icons/help.png) !important; }
+.icon-designcopy {background-image:url(../icons/cog_go.png) !important; }
+.icon-save {background-image:url(../icons/drive_disk.png) !important; }
+.icon-filerename {background-image:url(../icons/drive_edit.png) !important; }
+.icon-filedelete {background-image:url(../icons/drive_delete.png) !important; }
+.icon-saveas {background-image:url(../icons/drive_add.png) !important; }
+.icon-filerefresh {background-image:url(../icons/database_refresh.png) !important; }
+.icon-reload {background-image:url(../icons/drive_go.png) !important; }
+.icon-left {background-image:url(../icons/arrow_left.png) !important; }
+.icon-right {background-image:url(../icons/arrow_right.png) !important; }
+.icon-error {background-image:url(../icons/error.png) !important; }
+.icon-options {background-image:url(../icons/control_equalizer.png) !important; }
+
+.icon-el { background-image:url(../icons/folder_explore.png) !important; }
+.icon-deleteEl { background-image:url(../icons/application_delete.png) !important; }
+.icon-addEl { background-image:url(../icons/application_add.png) !important; }
+.icon-dupEl { background-image:url(../icons/application_double.png) !important; }
+.icon-editEl { background-image:url(../icons/application_edit.png) !important; }
+
+.icon-undo { background-image:url(../icons/arrow_undo.png) !important; }
+.icon-redo { background-image:url(../icons/arrow_redo.png) !important; }
+.icon-update { background-image:url(../icons/arrow_refresh.png) !important; }
+.icon-resize { background-image:url(../icons/arrow_inout.png) !important; }
+
+
+.icon-element-add .x-dd-drop-icon{background-image:url(../icons/element_new.png); }
+.icon-element-add-before .x-dd-drop-icon{background-image:url(../icons/element_new_before.png); }
+.icon-element-add-after .x-dd-drop-icon{background-image:url(../icons/element_new_after.png); }
+.icon-element-move .x-dd-drop-icon{background-image:url(../icons/element_copy.png);  }
+.icon-element-move-before .x-dd-drop-icon{background-image:url(../icons/element_previous.png);  }
+.icon-element-move-after .x-dd-drop-icon{background-image:url(../icons/element_next.png);  }

@@ -1,0 +1,237 @@
+[{
+  text : "Forms",
+  cls : "folder",
+  childeren : [{
+        text : "Form Panel",
+        qtip : "A panel containing form elements",
+        config : {
+          xtype : "form",
+          title : "Form"
+        },
+        cls : "file"
+  },{
+      text : "Field Set",
+      qtip : "A Fieldset, containing other form elements",
+      config : {
+        xtype : "fieldset",
+        title : "Legend",
+        autoHeight : true
+      },
+      cls : "file"
+    },{
+      text : "Combo Box",
+      qtip : "A combo box",
+      config : {
+        xtype : "combo",
+        fieldLabel : "Text",
+        name : "combovalue",
+        hiddenName : "combovalue"
+      },
+      cls : "file"
+    },{
+      text : "Text Field",
+      qtip : "A Text Field",
+      config : {
+        xtype : "textfield",
+        fieldLabel : "Text",
+        name : "textvalue"
+      },
+      cls : "file"
+    },{
+      text : "Text Area",
+      qtip : "A Text Area",
+      config : {
+        xtype : "textarea",
+        fieldLabel : "Text",
+        name : "textarea"
+      },
+      cls : "file"
+    },{
+      text : "Number Field",
+      qtip : "A Text Field where you can only enter numbers",
+      config : {
+        xtype : "numberfield",
+        fieldLabel : "Number",
+        name : "numbervalue"
+      },
+      cls : "file"
+    },{
+      text : "Time Field",
+      qtip : "A Text Field where you can only enter a time",
+      config : {
+        xtype : "timefield",
+        fieldLabel : "Time",
+        name : "timevalue"
+      },
+      cls : "file"
+    },{
+      text : "Date Field",
+      qtip : "A Text Field where you can only enter a date",
+      config : {
+        xtype : "datefield",
+        fieldLabel : "Date",
+        name : "datevalue"
+      },
+      cls : "file"
+    },{
+      text : "Check Box",
+      qtip : "A checkbox",
+      config : {
+        xtype : "checkbox",
+        fieldLabel : "Label",
+        boxLabel : "Box label",
+        name : "checkbox",
+        inputValue : "cbvalue"
+      },
+      cls : "file"
+    },{
+      text : "Radio Box",
+      qtip : "A radio form element",
+      config : {
+        xtype : "radio",
+        fieldLabel : "Label",
+        boxLabel : "Box label",
+        name : "radio",
+        inputValue : "radiovalue"
+      },
+      cls : "file"
+    },{
+      text : "Text Label",
+      qtip : "A textlabel",
+      config : {
+        xtype : "label",
+        text : "Label"
+      },
+      cls : "file"
+    },{
+      text : "Button",
+      qtip : "A button",
+      config : {
+        xtype : "button",
+        text : "Ok"
+      },
+      cls : "file"
+    },{
+     text : "Date Picker",
+     gtip : "A date picker",
+     config : {
+       xtype : "datepicker"
+     }
+    },{
+     text : "Color Pallet",
+     gtip : "A color Pallet",
+     config : {
+       xtype : "colorpalette"
+     }
+    }]
+},{
+  text : "Panels",
+  cls : "folder",
+  childeren : [{
+      text : "Panel",
+      qtip : "A simple panel with default layout",
+      config : {
+        xtype : "panel",
+        title : "Panel"
+      },
+      cls : "file"
+    },{
+      text : "Tab Panel",
+      qtip : "A panel with many tabs",
+      wizard : 'wizard/tabpanel-wiz.json',
+      cls : "file"
+    }]
+},{
+  text : "Layouts",
+  cls : "folder",
+  childeren : [{
+      text : "Fit Layout",
+      qtip : "Layout containing only one element, fitted to container",
+      config : {
+        layout : "fit",
+        title : "FitLayout Container"
+      },
+      cls : "file"
+    },{
+      text : "Card Layout",
+      qtip : "Layout containing many elements, only one can be displayed at a time",
+      config : {
+        layout : "card",
+        title : "CardLayout Container",
+        activeItem : 0
+      },
+      cls : "file"
+    },{
+      text : "Anchor Layout",
+      qtip : "Layout containing many elements, sized with \"anchor\" percentage values",
+      config : {
+        layout : "anchor",
+        title : "AnchorLayout Container"
+      },
+      cls : "file"
+    },{
+      text : "Absolute Layout",
+      qtip : "Layout containing many elements, absolutely positionned with x/y values",
+      config : {
+        layout : "absolute",
+        title : "AbsoluteLayout Container"
+      },
+      cls : "file"
+    },{
+      text : "Accordion Layout",
+      qtip : "Layout as accordion",
+      wizard: "wizard/accordion-wiz.json",
+      cls : "file"
+    },{
+      text : "Column Layout",
+      qtip : "Layout of columns",
+      wizard : "wizard/column-wiz.json",
+      cls : "file"
+    },{
+      text : "Border Layout",
+      qtip : "Layout with regions",
+      wizard : "wizard/border-wiz.json",
+      cls : "file"
+    }]
+},{
+  text : "Advanced",
+  cls : "folder",
+  childeren : [{
+      text : "Grid",
+      qtip : "A grid",
+      config : {
+        xtype : "grid",
+        border : false,
+        viewConfig : {
+          forceFit : true
+        },
+        __JSON__ds : "new Ext.data.Store({reader: new Ext.data.ArrayReader({}, [{name: 'comment'}]),data: [['Please set CM and DS properties']]})",
+        __JSON__cm : "new Ext.grid.ColumnModel([new Ext.grid.RowNumberer(),{header: 'Comment', width: 120, sortable: true, dataIndex: 'comment'}])"
+      },
+      cls : "file"
+    },{
+      text : "Tree Panel",
+      qtip : "A tree panel",
+      config : {
+        xtype : "treepanel",
+        animate : true,
+        autoScroll : true,
+        containerScroll : true,
+        __JSON__root : "new Ext.tree.TreeNode({text:'Tree Root',draggable : false})",
+        dropConfig : {
+          appendOnly : true
+        }
+      },
+      cls : "file"
+    },{
+      text : "JSON Panel",
+      qtip : "A panel supporting JSON load",
+      config : {
+        xtype : "jsonpanel",
+        title : "JSON Panel",
+        layout : "fit",
+        __JSON__autoLoad : "{url : 'json/myjson.json'}"
+      },
+      cls : "file"
+    }]
+}]

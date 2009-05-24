@@ -1,0 +1,17 @@
+<%args>
+</%args>
+<%perl>
+</%perl>
+% unless( $m->dhandler_arg ) {  ## /
+%#<& /site/main.mas &>
+%  my $req = $m->make_subrequest( comp => '/site/main.mas');
+%   $req->exec;	
+% } else {
+%#  $c->res->status(404);
+ 
+ Page not found by dhandler
+
+% }
+<%filter>
+	#s/\n|\r//g
+</%filter>

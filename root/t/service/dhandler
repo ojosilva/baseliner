@@ -1,0 +1,12 @@
+<%init>
+</%init>
+
+<h1>Servicios</h1>
+
+<%perl>
+	print '<li>'.$_ foreach ( keys %{ $service_store->services || () } );
+</%perl>
+
+<%once>
+	my $service_store = $c->config->{services}->{obj};
+</%once>
