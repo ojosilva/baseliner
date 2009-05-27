@@ -100,8 +100,21 @@ register 'service.job.run' => {
 
 sub job_run {
 	my ($self,$c,$config)=@_;
+	$c->stash->{job} = $self;
+	$c->stash->{logger} = BaselinerX::Job::Log->new( $c );
 	warn "Running JOB=" . $config->{jobid};
-	warn "Running Chain=" . $config->{chain};
+	if( $config->{chain} ) {  ## a chain has precedence over a single service
+		$c->log->debug("Running Chain=" . $config->{chain} ); 
+		my $chain = $c->registry->get( $config->{chain} );
+		$chain->go;
+	}
+	elsif( $config->{service} ) {
+		$c->log->debug("Running Service=" . $config->{service} ); 
+		$c->launch( $config->{service} );
+	}
+	else {
+		$c->throw( "No job chain or service defined for job " . $config->{jobid} );
+	}
 }
 
 use Proc::Background;

@@ -8,7 +8,6 @@ BEGIN { extends 'Catalyst::Controller' }
 __PACKAGE__->config->{namespace} = 'job/log';
 
 register 'menu.job.logs' => { label => 'Logs', url_comp => '/job/log/list', title=>'Logs' };
-
 register 'config.job.log' => {
 	metadata => [
 		{ id=>'job_id', label=>'Job', width=>200 },
@@ -18,6 +17,31 @@ register 'config.job.log' => {
 	]
 
 };
+
+=head1 Logging
+
+The basics:
+
+	my $log = $c->stash->{job}->{logger};
+	$log->error( "An error" );
+
+With data:
+
+	$log->error( "Another error", data=> $stdout_file );
+
+=cut
+sub common_log {
+	my ( $level, $self,$c, $text, %p )=@_;
+	my $row = $c->model('BaliLog')->create({ text=> $text, level=>$level }); 
+	$p{data} && $row->data( $p{data} );
+}
+
+sub warn { common_log('warn',@_) }
+sub error { common_log('error',@_) }
+sub fatal { common_log('fatal',@_) }
+sub info { common_log('info',@_) }
+sub debug { common_log('debug',@_) }
+
 
 sub logs_json : Local {
 	my ( $self,$c )=@_;

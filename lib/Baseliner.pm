@@ -75,6 +75,19 @@ __PACKAGE__->setup();
 		__PACKAGE__->commandline;
 	}
 	
+	sub launch {
+		my ($c, $service_name, $ns, $bl ) = @_;
+		$ns ||='/';
+		$bl ||='*';
+		my $service = $c->registry->get($service_name) || die "Could not find service '$service_name'";
+		my $config = $c->registry->get( $service->config ) if( $service->config );
+		my $config_data;
+		if( $config ) {
+			$config_data = $config->factory( $c, ns=>$ns, bl=>$bl, getopt=>1 );
+		}
+		$service->run( $c, $config_data );
+	}
+
 	sub inf {
 		my $c = shift;
 		my %p = @_;
