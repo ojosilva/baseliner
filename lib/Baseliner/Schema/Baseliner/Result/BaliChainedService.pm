@@ -1,4 +1,4 @@
-package Baseliner::Schema::Baseliner::Result::BaliRelease;
+package Baseliner::Schema::Baseliner::Result::BaliChainedService;
 
 use strict;
 use warnings;
@@ -6,7 +6,7 @@ use warnings;
 use base 'DBIx::Class';
 
 __PACKAGE__->load_components("InflateColumn::DateTime", "Core");
-__PACKAGE__->table("bali_release");
+__PACKAGE__->table("bali_chained_service");
 __PACKAGE__->add_columns(
   "id",
   {
@@ -15,7 +15,21 @@ __PACKAGE__->add_columns(
     is_nullable => 0,
     size => 126,
   },
-  "name",
+  "chain_id",
+  {
+    data_type => "NUMBER",
+    default_value => undef,
+    is_nullable => 0,
+    size => 126,
+  },
+  "seq",
+  {
+    data_type => "NUMBER",
+    default_value => undef,
+    is_nullable => 0,
+    size => 126,
+  },
+  "key",
   {
     data_type => "VARCHAR2",
     default_value => undef,
@@ -29,14 +43,17 @@ __PACKAGE__->add_columns(
     is_nullable => 1,
     size => 2000,
   },
-  "active",
-  { data_type => "CHAR", default_value => 1, is_nullable => 0, size => 1 },
 );
 __PACKAGE__->set_primary_key("id");
+__PACKAGE__->belongs_to(
+  "chain_id",
+  "Baseliner::Schema::Baseliner::Result::BaliChain",
+  { id => "chain_id" },
+);
 
 
 # Created by DBIx::Class::Schema::Loader v0.04005 @ 2009-05-28 20:49:13
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:nkLtEclpmVqo1OXhkmyMWw
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:v5UL4k4nxTRI4ooFJBKTaw
 
 
 # You can replace this text with custom content, and it will be preserved on regeneration

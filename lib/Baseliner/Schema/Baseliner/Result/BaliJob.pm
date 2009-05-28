@@ -23,29 +23,39 @@ __PACKAGE__->add_columns(
     size => 45,
   },
   "starttime",
-  { data_type => "DATE", default_value => undef, is_nullable => 0, size => 19 },
+  {
+    data_type => "DATE",
+    default_value => "SYSDATE",
+    is_nullable => 0,
+    size => 19,
+  },
   "maxstarttime",
-  { data_type => "DATE", default_value => undef, is_nullable => 0, size => 19 },
+  {
+    data_type => "DATE",
+    default_value => "SYSDATE+1",
+    is_nullable => 0,
+    size => 19,
+  },
   "endtime",
-  { data_type => "DATE", default_value => undef, is_nullable => 0, size => 19 },
+  { data_type => "DATE", default_value => undef, is_nullable => 1, size => 19 },
   "status",
   {
     data_type => "VARCHAR2",
-    default_value => undef,
+    default_value => "'WAITING'",
     is_nullable => 0,
     size => 45,
   },
   "ns",
   {
     data_type => "VARCHAR2",
-    default_value => undef,
+    default_value => "'/'",
     is_nullable => 0,
     size => 45,
   },
   "bl",
   {
     data_type => "VARCHAR2",
-    default_value => undef,
+    default_value => "'*'",
     is_nullable => 0,
     size => 45,
   },
@@ -58,8 +68,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.04005 @ 2009-05-18 13:57:06
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:/t5zMe5mBlz2HaeT8YrgsQ
+# Created by DBIx::Class::Schema::Loader v0.04005 @ 2009-05-28 20:49:13
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:tBspZGRahFMeXwe1mJ3s/A
 
 
 # You can replace this text with custom content, and it will be preserved on regeneration
