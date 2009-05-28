@@ -1,0 +1,29 @@
+(function(){
+      var form = new Ext.FormPanel( {
+                 frame    : true,
+                 url      : '<% $c->stash->{url_submit} %>',
+                 width    : <% $c->stash->{width} || 350 %>,
+                 items     : <% js_dumper(  $c->stash->{data} ) %>
+             }
+        );
+      form.getForm().load({
+             url:  '<% $c->stash->{url_store} %>'
+      });
+      var tb = new Ext.Toolbar({
+             id: 'formtb',
+             items: [ 
+             '<% $c->stash->{title} %>',
+              '->',
+             { xtype:'button', text: 'Submit', handler: function(){ Baseliner.formSubmit(form.getForm())} },
+             { xtype:'button',text:'Reset', handler: function() { form.getForm().reset() }  }
+             ] 
+      });
+      var panel = new Ext.Panel({
+             layout: 'fit' , border: 0 , tbar: tb, items: [ form  ] 
+      });
+      return panel;
+})();
+<%init>
+          use JavaScript::Dumper;
+</%init>
+ 
