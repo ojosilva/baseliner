@@ -1,7 +1,6 @@
 package BaselinerX::Type::Config;
 use Baseliner::Plug;
 with 'Baseliner::Core::Registrable';
-use Carp;
 
 register_class 'config' => __PACKAGE__;
 
@@ -52,9 +51,10 @@ sub factory {
 	$p{bl} ||= '*';
 	my $data = $p{data} || {};
 	for( @{$self->metadata} ) {
-		next if defined $data->{ $_->{id} };
+warn "KEY = " . $_->{id};		
+		next if defined $data->{ $_->{id} }; 
 		## load missing from table
-		my $rs = $c->model('Baseliner::BaliConfig')->search({ ns=>$p{ns}, bl=>$p{bl}, key=>$self->key.'.'.$_->{id} });
+		my $rs = $c->model('Baseliner::BaliConfig')->search({ ns=>$p{ns}, bl=>$p{bl}, key=>$self->key.'.'.$_->{id} }) or die $!;
 		while( my $r = $rs->next ) {
 			$data->{ $_->{id} } = $r->value;
 		}
@@ -63,18 +63,32 @@ sub factory {
 	return $data;
 }
 
+sub store {
+	my ($self, $c, %p ) = @_;
+	my $data = $p{data};
+	$p{ns} ||= '/';
+	$p{bl} ||= '*';
+	for( @{$self->metadata} ) {
+		next unless defined $data->{ $_->{id} };
+		my $rs = $c->model('Baseliner::BaliConfig')->search({ ns=>$p{ns}, bl=>$p{bl}, key=>$self->key.'.'.$_->{id} })
+			or die $!;			
+		while( my $r = $rs->next ) {
+			$r->value( $data->{ $_->{id} } );
+			$r->update;
+		}
+	}
+	return 1;
+}
+
 sub grid_columns { 
 	my $self=shift;
 	my @cols;
     ## {header: "Modificado", width:80, dataIndex: 'modificado', sortable: true, hidden: true },
-	my @xmeta = @{$self->metadata || [] };
-    use integer;
-    my $avg_width=800 /@xmeta;
-	for( @xmeta ) {
+	for( @{$self->metadata || [] } ) {
         push @cols,
           {
             header    => $_->{label},
-            width     => ( $_->{width} || "$avg_width" ),
+            width     => ( $_->{width} || 80 ),
             dataIndex => $_->{id},
             sortable  => ( $_->{sortable} || \1 ),
             hidden    => ( $_->{hidden} || \0 )
@@ -189,19 +203,11 @@ sub getopt {
 			$opt{$verb} = $_->{$verb} if( defined $_->{$verb} );
 		}
 		push @opts, bless(\%opt,'Getopt::Lucid::Spec');
-	};
+	} ;
 	use warnings;
-    my $opt;
-    #try {
-        $opt = Getopt::Lucid->getopt( \@opts );
-        $opt->merge_defaults( $defaults ) if ref $defaults;
-    #} otherwise {
-        #croak "Error while reading options: $@";
-    #};
-    return { $opt->options };
-    #if( $@ ) {
-        #croak "Error while reading options: $@";
-    #}
+	my $opt = Getopt::Lucid->getopt( \@opts );
+	$opt->merge_defaults( $defaults ) if ref $defaults;
+	return { $opt->options };
 }
 
 # creates a config object
@@ -217,41 +223,41 @@ sub config_store {
 }
 
 ## config to formfu elements
-#sub formfu_elements {
-#	my ($self) = @_;
-#	unless( @{$self->formfu} ) {  
-#		my @elems=();  ## formfu elements
-#		my $pos = 0;
-#		foreach my $row ( @{$self->metadata} ) {
-#			my $key = $row->{id};
-#			my $e = {};
-#			given( uc( $row->{type} ) ) {
-#				when /TEXT/ {
-#					$e->{type} = 'Text';
-#				}
-#				when /TEXTAREA/ {
-#					$e->{type} = 'Textarea';
-#					$e->{attrs_xml} = {  wysiwyg => 1 };
-#				}
-#				when /BOOL/ {
-#					$e->{type} = 'Select';
-#					$e->{options} = [ ['1','True'], ['0','False'] ];
-#					$e->{default} = '1';
-#				}
-#			}
-#			$e->{name} = $row->{name} || $key;
-#			$e->{label} = $row->{label} || $e->{name};
-#			for my $e_name ( keys %{ $row->{formfu} || {} } ) {  
-#				$e->{$e_name} = $row->{$e_name};
-#			}
-#			use YAML; print STDERR "$key - ".Dump $e."\n";
-#			$elems[ defined $row->{pos} ? $row->{pos} : $pos++ ] = $e;
-#		}
-#		my @elems2 = grep { ref $_ } @elems;## get rid of empty refs
-#		push @elems2, {  type=> 'Submit', name=> 'Sb' };
-#		$self->formfu(\@elems2);  
-#	}		
-#	return $self->formfu;
-#}
+sub formfu_elements {
+	my ($self) = @_;
+	unless( @{$self->formfu} ) {  
+		my @elems=();  ## formfu elements
+		my $pos = 0;
+		foreach my $row ( @{$self->metadata} ) {
+			my $key = $row->{id};
+			my $e = {};
+			given( uc( $row->{type} ) ) {
+				when /TEXT/ {
+					$e->{xtype} = 'textfield';
+				}
+				when /TEXTAREA/ {
+					$e->{xtype} = 'textarea';
+					$e->{attrs_xml} = {  wysiwyg => 1 };
+				}
+				when /BOOL/ {
+					$e->{xtype} = 'Select';
+					$e->{options} = [ ['1','True'], ['0','False'] ];
+					$e->{default} = '1';
+				}
+			}
+			$e->{name} = $row->{name} || $key;
+			$e->{fieldLabel} = $row->{label} || $e->{name};
+			for my $e_name ( keys %{ $row->{extjs} || {} } ) {  			
+				$e->{$e_name} = $row->{extjs}->{$e_name};
+			}
+			use YAML; print STDERR "$key - ".Dump $e."\n";
+			$elems[ defined $row->{pos} ? $row->{pos} : $pos++ ] = $e;
+		}
+		my @elems2 = grep { ref $_ } @elems;## get rid of empty refs
+		push @elems2, {  type=> 'Submit', name=> 'Sb' };
+		$self->formfu(\@elems2);  
+	}		
+	return $self->formfu;
+}
 
 1;
