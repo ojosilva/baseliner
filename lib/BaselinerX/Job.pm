@@ -8,6 +8,10 @@ use YAML;
 #  otro
 
 BEGIN { extends 'Catalyst::Controller' }
+BEGIN { 
+    ## Oracle needs this
+    $ENV{'NLS_DATE_FORMAT'} = 'YYYY-MM-DD HH24:MI:SS';
+}
 use JavaScript::Dumper;
 
 register 'config.job.daemon' => {
@@ -24,7 +28,7 @@ register 'config.job' => {
 		{ id=>'maxstarttime', label => 'MaxStartDate', type=>'text', },
 		{ id=>'endtime', label => 'EndDate', type=>'text' },
 		{ id=>'status', label => 'Status', type=>'text', default=>'READY' },
-		{ id=>'mask', label => 'Job Naming Mask', type=>'text', default=>'$s.%s-%08d' },
+		{ id=>'mask', label => 'Job Naming Mask', type=>'text', default=>'%s.%s-%08d' },
 		{ id=>'runner', label => 'Registry Entry to run', type=>'text', default=>'service.job.dummy' },
 		{ id=>'comment', label => 'Comment', type=>'text' },
 	],
@@ -127,15 +131,17 @@ sub create_job {
 	my $now = DateTime->now;
 	$now->set_time_zone('CET');
 	my $end = $now->clone->add( hours => 1 );
-    $ENV{'NLS_DATE_FORMAT'} = 'YYYY-MM-DD HH24:MI:SS';
     my $ora_now =  $now->strftime('%Y-%m-%d %T');
     my $ora_end =  $end->strftime('%Y-%m-%d %T');
     #require DateTime::Format::Oracle;
     #my $ora_now = DateTime::Format::Oracle->format_datetime( $now );
     #my $ora_end = DateTime::Format::Oracle->format_datetime( $end );
     #warn "ORA=$ora_now";
-	my $job = $c->model('balijob')->create({ name=>'temp', starttime=> $ora_now, endtime=>$ora_end, maxstarttime=>$ora_end, status=> $status, ns=>'/sct', bl=>'TEST' });
-	my $name = $config->{name} || sprintf( $config->{mask}, 'N', $c->inf_bl, $job->id );
+	my $job = $c->model('balijob')->create({ name=>'temp'.$$, starttime=> $ora_now, endtime=>$ora_end, maxstarttime=>$ora_end, status=> $status, ns=>'/sct', bl=>'TEST' });
+	my $name = $config->{name} 
+        || sprintf( $config->{mask}, 'N', 
+        $c->inf_bl eq '*' ? 'ALL' : $c->inf_bl , 
+        $job->id );
 	$config->{runner} && $job->runner( $config->{runner} );
 	#$config->{chain} && $job->chain( $config->{chain} );
 	warn "Create JOB $name";

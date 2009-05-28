@@ -30,6 +30,7 @@ __PACKAGE__->add_columns(
     size => 45,
   },
 );
+__PACKAGE__->set_primary_key("to_id", "from_id");
 __PACKAGE__->belongs_to(
   "from_id",
   "Baseliner::Schema::Baseliner::Result::BaliConfig",
@@ -42,8 +43,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.04005 @ 2009-05-28 20:49:13
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:PeEalJ5UlJAfSYIa3TnTxA
+# Created by DBIx::Class::Schema::Loader v0.04005 @ 2009-05-28 21:39:26
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:lEUn+SXCGR0O7Kim3EN5cQ
 
 
 # You can replace this text with custom content, and it will be preserved on regeneration
