@@ -4,6 +4,8 @@ use Baseliner::Utils;
 use DateTime;
 use YAML;
 
+# comment
+
 BEGIN { extends 'Catalyst::Controller' }
 use JavaScript::Dumper;
 
