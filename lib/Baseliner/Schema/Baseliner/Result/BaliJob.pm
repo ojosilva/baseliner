@@ -71,4 +71,13 @@ __PACKAGE__->add_columns(
   "endtime",
   { data_type => "DATETIME", is_nullable => 0, size => 19, inflate_date=>0 },
 );
+__PACKAGE__->add_columns(
+  "runner",
+  {
+    data_type => "VARCHAR2",
+    default_value => undef,
+    is_nullable => 0,
+    size => 100,
+  },
+);
 1;

@@ -107,6 +107,10 @@ __PACKAGE__->setup();
 		}
 		return \%data;
 	}
+	sub inf_bl {
+		my $c=shift;
+		$c->stash->{bl};
+	}
 	sub inf_search {
 		my ($c, %p ) = @_;
 		$p{ns} ||= '%';

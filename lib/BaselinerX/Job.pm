@@ -1,7 +1,6 @@
 package BaselinerX::Job;
 use Baseliner::Plug;
 use Baseliner::Utils;
-use TheSchwartz::Moosified;
 use DateTime;
 use YAML;
 
@@ -14,19 +13,6 @@ register 'config.job.daemon' => {
 	]
 };
 
-register 'config.job.schartz' => {
-	metadata=> [
-		{ id=>'service', label=>'Service Name', type=>'text' },
-		{ id=>'worker', label=>'Worker', type=>'text' },
-		{ id=>'verbose', label=>'Verbose', type=>'text' },
-		{ id=>'tz', label=>'TimeZone', type=>'text' },		
-		{ id=>'start', type=>'date' },
-		{ id=>'until', type=>'date' },
-		{ id=>'run_after', type=>'int' },
-		{ id=>'grabbed_until', type=>'text' },
-	]
-};
-
 register 'config.job' => {
 	metadata=> [
 		{ id=>'jobid', label => 'Job ID', type=>'text', width=>200 },
@@ -35,6 +21,8 @@ register 'config.job' => {
 		{ id=>'maxstarttime', label => 'MaxStartDate', type=>'text', },
 		{ id=>'endtime', label => 'EndDate', type=>'text' },
 		{ id=>'status', label => 'Status', type=>'text', default=>'READY' },
+		{ id=>'mask', label => 'Job Naming Mask', type=>'text', default=>'$s.%s-%08d' },
+		{ id=>'runner', label => 'Registry Entry to run', type=>'text', default=>'service.job.dummy' },
 		{ id=>'comment', label => 'Comment', type=>'text' },
 	],
 	relationships => [ { id=>'natures', label => 'Technologies', type=>'list', config=> 'config.tech' },
@@ -51,34 +39,6 @@ register 'menu.job.create' => { label => 'Create a new Job', url=>'hello.mas' };
 register 'menu.job.hist' => { label => 'Historical Data', handler => 'function(){ Ext.Msg.alert("Hello"); }' };
 register 'menu.job.list' => { label => 'Monitor', url_comp => '/job/monitor', title=>'Monitor' };
 register 'menu.job.hist.all' => { label => 'List all Jobs', url=>'/core/registry', title=>'Registry'  };
-
-register 'service.job.create' => {
-	name => 'Schedule a new job',
-	config => 'config.job.schartz',
-	handler => sub {
-		my ($self,$c)=@_;
-		my $client = TheSchwartz::Moosified->new( verbose => 1);
-		$c->model('DBIC')->storage->dbh_do(
-			sub {
-				my ($storage, $dbh) = @_;
-				$client->databases([$dbh]) or die $!;
-			} );
-
-		use Date::Manip; 
-		Date_Init( "TZ=" . $b->{'config.job.tz'} ) if($b->{'config.job.tz'});
-		my $run_after = $b->{'config.job.run_after'} || UnixDate(ParseDate($b->{'config.job.start'}, '%s' ));
-		## schedule a job
-		my $job = TheSchwartz::Moosified::Job->new(
-			funcname => $b->{'config.job.worker'},
-			run_after=> $run_after,  ## run_after expects a secs since epoch value
-			  ## you may also wanna set grabbed_until
-			arg      => [ foo => 'bar' ],
-		);
-		$client->insert($job) or die $!;
-		$client->can_do($b->{'config.job.worker'});
-		$client->work();
-	}
-};
 
 register 'service.job.new' => {
 	name => 'Schedule a new job',
@@ -97,6 +57,14 @@ register 'service.job.run' => {
 	config => 'config.job',
 	handler => \&job_run,
 };
+register 'service.job.dummy' => {
+	name => 'A Dummy Job',
+	handler => sub {
+		my ($self,$c)=@_;
+		warn "DUMMY";
+		$c->log->info("A dummy job is running");
+	}
+};
 
 sub job_run {
 	my ($self,$c,$config)=@_;
@@ -108,12 +76,12 @@ sub job_run {
 		my $chain = $c->registry->get( $config->{chain} );
 		$chain->go;
 	}
-	elsif( $config->{service} ) {
-		$c->log->debug("Running Service=" . $config->{service} ); 
-		$c->launch( $config->{service} );
+	elsif( $config->{runner} ) {
+		$c->log->debug("Running Service=" . $config->{runner} ); 
+		$c->launch( $config->{runner} );
 	}
 	else {
-		$c->throw( "No job chain or service defined for job " . $config->{jobid} );
+		Catalyst::Exception->throw( "No job chain or service defined for job " . $config->{jobid} );
 	}
 }
 
@@ -124,6 +92,7 @@ sub job_daemon {
 	while(1) {
 		my $now = DateTime->now;
 		$now->set_time_zone('CET');
+		$now=~s{T}{ }g;
 		my @rs = $c->model('balijob')->search({ 
 			starttime => { '<' , $now }, 
 			maxstarttime => { '>' , $now }, 
@@ -137,7 +106,7 @@ sub job_daemon {
 			$r->status('RUNNING');
 			$r->update;
 			warn "$0 :: @ARGV";
-			my $cmd = "perl $0 job.run jobid=" . $r->id;
+			my $cmd = "perl $0 job.run runner=\"". $r->runner ."\" jobid=". $r->id;
 			my $proc = Proc::Background->new( $cmd );
 		}
 		sleep $freq;	
@@ -146,14 +115,12 @@ sub job_daemon {
 
 sub create_job {
 	my ($self,$c,$config)=@_;
-	my $jobid = $config->{jobid} || 'N.000010101';
 	my $status = $config->{status};
 	#my $rs = $c->model('Harvest::Harpackage')->search();
 	#while( my $r = $rs->next ) {
 	#	warn "P=" . $r->packagename
 	#}
 	#$c->inf_write( ns=>'/job', bl=>'DESA', key=>'config.job.jobid', value=>$jobid ); 	
-	warn "Create JOB $jobid";
 	my $now = DateTime->now;
 	$now->set_time_zone('CET');
 	my $end = $now->clone->add( hours => 1 );
@@ -165,7 +132,11 @@ sub create_job {
     #my $ora_end = DateTime::Format::Oracle->format_datetime( $end );
     #warn "ORA=$ora_now";
 	my $job = $c->model('balijob')->create({ name=>'temp', starttime=> $ora_now, endtime=>$ora_end, maxstarttime=>$ora_end, status=> $status, ns=>'/sct', bl=>'TEST' });
-	$job->name( $jobid . $now );
+	my $name = $config->{name} || sprintf( $config->{mask}, 'N', $c->inf_bl, $job->id );
+	$config->{runner} && $job->runner( $config->{runner} );
+	#$config->{chain} && $job->chain( $config->{chain} );
+	warn "Create JOB $name";
+	$job->name( $name );
 	$job->update;
 }
 
