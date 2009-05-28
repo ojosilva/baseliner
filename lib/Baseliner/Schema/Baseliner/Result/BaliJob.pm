@@ -59,6 +59,13 @@ __PACKAGE__->add_columns(
     is_nullable => 0,
     size => 45,
   },
+  "runner",
+  {
+    data_type => "VARCHAR2",
+    default_value => undef,
+    is_nullable => 1,
+    size => 255,
+  },
 );
 __PACKAGE__->set_primary_key("id");
 __PACKAGE__->has_many(
@@ -68,8 +75,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.04005 @ 2009-05-28 20:49:13
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:tBspZGRahFMeXwe1mJ3s/A
+# Created by DBIx::Class::Schema::Loader v0.04005 @ 2009-05-28 21:39:26
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:XoJeCzKsji6Zhl6Q1f5PzA
 
 
 # You can replace this text with custom content, and it will be preserved on regeneration

@@ -19,11 +19,13 @@ if( !@ARGV ) {
 
 my @argv = @ARGV;
 my $service_name = shift @ARGV;
-my $ns = '/';
-my $bl = '*';
+use Getopt::Long;
+GetOptions(
+    'ns=s' => \( my $ns = '/' ),
+    'bl=s' => \( my $bl = '*' )
+);
 $c->stash->{ns} = $ns;
 $c->stash->{bl} = $bl;
-#GetOptions( 'ns' => \$ns );
 
 # load data from a stored config record
 ## ie. bali server --config config://
