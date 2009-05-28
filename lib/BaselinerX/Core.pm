@@ -1,6 +1,8 @@
 package BaselinerX::Core;
 use Baseliner::Plug;
 
+# otro comentario
+
 register 'menu.admin' => { label => 'Admin' };
 register 'menu.admin.registry' => { label => 'List Registry Data', url=>'/core/registry', title=>'Registry' };
 
