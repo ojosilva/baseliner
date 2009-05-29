@@ -59,7 +59,7 @@ sub xml_to_extjs : Private {
 			# assign current date to field
 			if(  $key =~ /date-field/ ) {
 				my $val = $row->get_column($field); ## avoid column deflation
-                $item->{value} = parse_date('dd/mm/yy', $val)->dmy('/');  ## dd/mm/yy => dd/mm/yyyy
+                $val and $item->{value} = parse_date('dd/mm/yy', $val)->dmy('/');  ## dd/mm/yy => dd/mm/yyyy
 				$item->{format} = 'd/m/Y';  ## tell extjs what format to use
 			} else {
 				$item->{value} = $row->$field();
