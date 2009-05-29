@@ -41,7 +41,9 @@ __PACKAGE__->config({
   });
 
 use Cache::FastMmap;
+no strict;
 sub Cache::FastMmap::CLONE {} ## to avoid the no threads die 
+use strict;
 __PACKAGE__->config->{cache}->{storage} = 'bali_cache';
 __PACKAGE__->config->{cache}->{expires} = 333600;
 #__PACKAGE__->config->{authentication}{dbic} = {
