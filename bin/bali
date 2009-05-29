@@ -1,2 +1,3 @@
-cd /opt/ca/bali
-perl script/bali.pl $*
+cd $BASELINER_HOME
+# -X : no warnings for production environments
+perl -X script/bali.pl $*

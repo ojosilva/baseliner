@@ -99,6 +99,8 @@ sub form_meta : Path('/scm/servlet/harweb.Form') {
 	#$c->res->body( '<pre>' . $c->stash->{form} );
 }
 
+use DateTime::Format::DateParse;
+
 sub form_submit : Path( '/scm/form_submit' ) {
 	my ($self,$c)=@_;
 	#my $table = $c->req->params->{db_table};
@@ -111,6 +113,12 @@ sub form_submit : Path( '/scm/form_submit' ) {
 	my $formobjid = $p->{formobjid};
  	my $form = $c->model( 'Harvest::' . $table )->search({ formobjid=>$formobjid })->first;
 	delete $p->{$_} for( qw/dbtable formobjid formname id name numtabs/ );
+    for(keys %{  $p  }) {
+        if( $form->column_info($_)->{data_type} =~ 'date' ) {
+            my $dt = parse_date( 'dd/mm/Y' , $p->{$_} );
+            $p->{$_} = $dt->ymd('/'); ## y/m/d
+        }
+    }
 	eval {
 		#$c->model( 'Harvest' )->storage->dbh_do( sub { $_[1]->do( "alter session set nls_date_format = 'DD/MM/YYYY' "); });
 		$form->update( $p );

@@ -6,7 +6,7 @@ Some utilities shared by different Baseliner modules and plugins.
 
 =cut 
 
-use Exporter::Tidy default => [ qw(_loc slashFwd slashBack slashSingle _unique _throw _say _now _nowstamp) ];
+use Exporter::Tidy default => [ qw(_loc _log slashFwd slashBack slashSingle _unique _throw _say _now _nowstamp parse_date) ];
 	
 use Locale::Maketext::Simple (Style => 'gettext');
 use Carp;
@@ -55,12 +55,21 @@ sub _say {
 } 
 
 sub _now {
-    DateTime->now(time_zone=>'CET')
+    my $now = DateTime->now(time_zone=>'CET');
+    $now=~s{T}{ }g;
+    return $now;
 }
 
 sub _nowstamp {
     (my $t = _now )=~ s{\:|\/|\\}{}g;
     return $t;
+}
+
+use DateTime::Format::Natural;
+sub parse_date {
+    my ( $format, $date ) = @_;
+    my $parser = DateTime::Format::Natural->new( format=>$format );
+    $parser->parse_datetime($date);
 }
 
 1;

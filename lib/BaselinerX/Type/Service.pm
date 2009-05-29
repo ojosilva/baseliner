@@ -69,10 +69,10 @@ sub run {
 	$ENV{CATALYST_DEBUG} && print STDERR "===Config $self->{config}===\n",YAML::Dump(@_),"\n" if( @_);
 	print "===Starting service: $key | $version | $service | $module ===\n";
 	if( ref($handler) eq 'CODE' ) {
-		$handler->( $self, @_ );
+		$handler->( bless($self, $module), @_ );
 	} 
 	elsif( $handler && $module ) {
-		$module->$handler($self, @_);	
+		$module->$handler(bless($self,$module), @_);	
 	}
 	else {
 		die "Can't find sub $service {...} nor a handler directive for the service '$service'";

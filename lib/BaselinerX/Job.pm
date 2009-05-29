@@ -98,7 +98,7 @@ sub job_daemon {
 	my $freq = $config->{frequency};
 	while(1) {
         my $now = _now;
-		$now=~s{T}{ }g;
+ warn "===NOW: $now";
 		my @rs = $c->model('balijob')->search({ 
 			starttime => { '<' , $now }, 
 			maxstarttime => { '>' , $now }, 
@@ -115,7 +115,7 @@ sub job_daemon {
 			my $cmd = "perl $0 job.run runner=\"". $r->runner ."\" jobid=". $r->id;
 			my $proc = Proc::Background->new( $cmd );
 		}
-        $c->forward( 'job_expired' );
+        $self->job_expired($c);
 		sleep $freq;	
 	}
 }
