@@ -9,7 +9,7 @@ CREATE TABLE BALI_JOB
   STARTTIME     DATE                            DEFAULT SYSDATE               NOT NULL,
   MAXSTARTTIME  DATE                            DEFAULT SYSDATE+1             NOT NULL,
   ENDTIME       DATE,
-  STATUS        VARCHAR2(45 BYTE)               DEFAULT 'WAITING'             NOT NULL,
+  STATUS        VARCHAR2(45 BYTE)               DEFAULT 'READY'             NOT NULL,
   NS            VARCHAR2(45 BYTE)               DEFAULT '/'                   NOT NULL,
   BL            VARCHAR2(45 BYTE)               DEFAULT '*'                   NOT NULL,
   RUNNER        VARCHAR2(255 BYTE)

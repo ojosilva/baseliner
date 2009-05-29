@@ -97,8 +97,7 @@ sub job_daemon {
 	my ($self,$c,$config)=@_;
 	my $freq = $config->{frequency};
 	while(1) {
-		my $now = DateTime->now;
-		$now->set_time_zone('CET');
+        my $now = _now;
 		$now=~s{T}{ }g;
 		my @rs = $c->model('balijob')->search({ 
 			starttime => { '<' , $now }, 
@@ -116,8 +115,24 @@ sub job_daemon {
 			my $cmd = "perl $0 job.run runner=\"". $r->runner ."\" jobid=". $r->id;
 			my $proc = Proc::Background->new( $cmd );
 		}
+        $c->forward( 'job_expired' );
 		sleep $freq;	
 	}
+}
+
+sub job_expired {
+	my ($self,$c)=@_;
+    _log( "Checking for expired jobs..." );
+    my @rs = $c->model('balijob')->search({ 
+			maxstarttime => { '<' , _now }, 
+			status => 'READY',
+    });
+    foreach my $row ( @rs ) {
+        _log( "Job $row->{name} expired (maxstartime=$row->{maxstarttime}");
+        $row->status('EXPIRED');
+        $row->update;
+    }
+    return;
 }
 
 sub create_job {
@@ -144,7 +159,7 @@ sub create_job {
         $job->id );
 	$config->{runner} && $job->runner( $config->{runner} );
 	#$config->{chain} && $job->chain( $config->{chain} );
-	warn "Create JOB $name";
+	warn "Creating JOB $name";
 	$job->name( $name );
 	$job->update;
 }

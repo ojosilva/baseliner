@@ -42,6 +42,10 @@ sub _loc {
 	loc( @_ );
 }
 
+sub _log {
+	print STDERR ( @_, "\n" );
+}
+
 sub _throw {
 	Carp::confess(@_);
 }
