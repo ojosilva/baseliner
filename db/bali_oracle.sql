@@ -12,7 +12,8 @@ CREATE TABLE BALI_JOB
   STATUS        VARCHAR2(45 BYTE)               DEFAULT 'READY'             NOT NULL,
   NS            VARCHAR2(45 BYTE)               DEFAULT '/'                   NOT NULL,
   BL            VARCHAR2(45 BYTE)               DEFAULT '*'                   NOT NULL,
-  RUNNER        VARCHAR2(255 BYTE)
+  RUNNER        VARCHAR2(255 BYTE), 
+  PID           NUMBER
 );
 
 
