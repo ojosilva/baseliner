@@ -1,0 +1,15 @@
+<pre>
+<%perl>
+
+use YAML;
+my @rs = $c->model("Harvest::FormGbp")->search->all;
+foreach my $r ( @rs ) {
+print Dump $r->column_info('gbp_inicio')->{data_type}
+}
+
+ use DateTime::Format::Natural;
+ my $parser = DateTime::Format::Natural->new( format=>'dd/mm/Y' );
+ my $dt = $parser->parse_datetime('01/11/2009' );
+print "DT = " .$dt->ymd('/');
+
+</%perl>
