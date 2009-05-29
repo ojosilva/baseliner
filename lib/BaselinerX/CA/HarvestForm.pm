@@ -1,5 +1,6 @@
 package BaselinerX::CA::HarvestForm;
 use Baseliner::Plug;
+use Baseliner::Utils;
 
 # http://localhost:3000/scm/servlet/harweb.Form?CMD=GetInfo&ID=37&PACKAGE_ID=39&PROJECT_ID=50&PACKAGE_NAME=GBP.328.N-000009%20prueba
 
@@ -57,10 +58,9 @@ sub xml_to_extjs : Private {
 			$item->{anchor} = "80%" if(  $key =~ /text-area/ );
 			# assign current date to field
 			if(  $key =~ /date-field/ ) {
-				$item->{format} = 'd/m/Y';
-				my $val = $row->$field();
-				$item->{value} = \qq{ Date.parseDate("$val", "d/m/y" ) };
-				#$item->{listeners} = { change=> \" function(t,f,n){ t.value+= ' 00:00:00'; alert( 'hola:'+t.value )  }  " };
+				my $val = $row->get_column($field); ## avoid column deflation
+                $item->{value} = parse_date('dd/mm/yy', $val)->dmy('/');  ## dd/mm/yy => dd/mm/yyyy
+				$item->{format} = 'd/m/Y';  ## tell extjs what format to use
 			} else {
 				$item->{value} = $row->$field();
 			}
@@ -114,9 +114,8 @@ sub form_submit : Path( '/scm/form_submit' ) {
  	my $form = $c->model( 'Harvest::' . $table )->search({ formobjid=>$formobjid })->first;
 	delete $p->{$_} for( qw/dbtable formobjid formname id name numtabs/ );
     for(keys %{  $p  }) {
-        if( $form->column_info($_)->{data_type} =~ 'date' ) {
-            my $dt = parse_date( 'dd/mm/Y' , $p->{$_} );
-            $p->{$_} = $dt->ymd('/'); ## y/m/d
+        if( $form->column_info($_)->{data_type} =~ m/date/i ) {
+            $p->{$_} = parse_date( 'dd/mm/Y' , $p->{$_} )->ymd; ## y-m-d - to match NLS_DATE
         }
     }
 	eval {

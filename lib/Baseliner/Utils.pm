@@ -6,7 +6,7 @@ Some utilities shared by different Baseliner modules and plugins.
 
 =cut 
 
-use Exporter::Tidy default => [ qw(_loc _log slashFwd slashBack slashSingle _unique _throw _say _now _nowstamp parse_date) ];
+use Exporter::Tidy default => [ qw/_loc _log slashFwd slashBack slashSingle _unique _throw _say _now _nowstamp parse_date/ ];
 	
 use Locale::Maketext::Simple (Style => 'gettext');
 use Carp;
@@ -69,7 +69,7 @@ use DateTime::Format::Natural;
 sub parse_date {
     my ( $format, $date ) = @_;
     my $parser = DateTime::Format::Natural->new( format=>$format );
-    $parser->parse_datetime($date);
+    return $parser->parse_datetime(string => $date);
 }
 
 1;
