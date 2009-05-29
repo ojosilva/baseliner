@@ -98,7 +98,6 @@ sub job_daemon {
 	my $freq = $config->{frequency};
 	while(1) {
         my $now = _now;
- warn "===NOW: $now";
 		my @rs = $c->model('balijob')->search({ 
 			starttime => { '<' , $now }, 
 			maxstarttime => { '>' , $now }, 
