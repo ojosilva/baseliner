@@ -14,7 +14,7 @@ use Catalyst::Runtime '5.80';
 #                 directory
 
 use parent qw/Catalyst/;
-use Catalyst qw/-Debug StackTrace
+use Catalyst qw/StackTrace
                 ConfigLoader 
                 I18N
                 CommandLine
@@ -41,9 +41,11 @@ __PACKAGE__->config({
   });
 
 use Cache::FastMmap;
-no strict;
-sub Cache::FastMmap::CLONE {} ## to avoid the no threads die 
-use strict;
+{
+	no warnings;
+	no strict;
+	sub Cache::FastMmap::CLONE {} ## to avoid the no threads die 
+}
 __PACKAGE__->config->{cache}->{storage} = 'bali_cache';
 __PACKAGE__->config->{cache}->{expires} = 333600;
 #__PACKAGE__->config->{authentication}{dbic} = {
@@ -62,6 +64,11 @@ __PACKAGE__->config->{cache}->{expires} = 333600;
 # Start the application
 __PACKAGE__->setup();
 
+# Setup date formating for Oracle
+my $dbh = __PACKAGE__->model('Baseliner')->storage->dbh;
+if( $dbh->{Driver}->{Name} eq 'Oracle' ) {
+	$dbh->do("alter session set nls_date_format='yyyy-mm-dd hh24:mi:ss'");
+}
 	
 	# Inversion of Control
 	use Baseliner::Core::Registry;

@@ -73,11 +73,15 @@ register 'service.job.dummy' => {
 	}
 };
 
+has 'jobid' => ( is=>'rw', isa=>'Int' );
+has 'logger' => ( is=>'rw', isa=>'Object' );
+
 sub job_run {
 	my ($self,$c,$config)=@_;
+	my $jobid = $config->{jobid};
 	$c->stash->{job} = $self;
-	$c->stash->{logger} = BaselinerX::Job::Log->new( $c );
-	warn "Running JOB=" . $config->{jobid};
+	$self->logger( new BaselinerX::Job::Log({ jobid=>$jobid }) );
+	warn "Running JOB=" . $jobid;
 	if( $config->{chain} ) {  ## a chain has precedence over a single service
 		$c->log->debug("Running Chain=" . $config->{chain} ); 
 		my $chain = $c->registry->get( $config->{chain} );
@@ -85,7 +89,21 @@ sub job_run {
 	}
 	elsif( $config->{runner} ) {
 		$c->log->debug("Running Service=" . $config->{runner} ); 
-		$c->launch( $config->{runner} );
+		eval {
+		$c->launch( $config->{runner} ); 
+		};
+		unless( $@ ) {
+			my $r = $c->model('Baseliner::BaliJob')->search({ id=>$jobid })->first;
+			$r->status('DONE');
+			$r->update;
+		} else {
+			_log "*** Error running Job $jobid ****";
+			_log $@;
+			$self->logger->error( $@ );
+			my $r = $c->model('Baseliner::BaliJob')->search({ id=>$jobid })->first;
+			$r->status('ERROR');
+			$r->update;
+		}
 	}
 	else {
 		Catalyst::Exception->throw( "No job chain or service defined for job " . $config->{jobid} );

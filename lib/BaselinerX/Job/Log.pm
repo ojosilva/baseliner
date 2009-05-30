@@ -22,7 +22,8 @@ register 'config.job.log' => {
 
 The basics:
 
-	my $log = $c->stash->{job}->{logger};
+	my $job = $c->stash->{job};
+	my $log = $job->logger;
 	$log->error( "An error" );
 
 With data:
@@ -30,10 +31,14 @@ With data:
 	$log->error( "Another error", data=> $stdout_file );
 
 =cut
+
+has 'jobid' => ( is=>'rw', isa=>'Int' );
+
 sub common_log {
-	my ( $level, $self,$c, $text, %p )=@_;
-	my $row = $c->model('BaliLog')->create({ text=> $text, level=>$level }); 
+	my ( $level, $self, $text, %p )=@_;
+	my $row = Baseliner->model('Baseliner::BaliLog')->create({ job_id=>$self->jobid, text=> $text, lev=>$level }); 
 	$p{data} && $row->data( $p{data} );
+	$row->update;
 }
 
 sub warn { common_log('warn',@_) }

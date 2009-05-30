@@ -1,6 +1,11 @@
 package BaselinerX::CA::HarvestDB;
 use Baseliner::Plug;
 
+my $dbh = Baseliner->model('Harvest')->storage->dbh;
+if( $dbh->{Driver}->{Name} eq 'Oracle' ) {
+	$dbh->do("alter session set nls_date_format='yyyy-mm-dd hh24:mi:ss'");
+}
+
 register 'config.harvest.db' => {
 	metadata => [
 		{ id=>'connection', label=>'Connection String', type=>'text' },
