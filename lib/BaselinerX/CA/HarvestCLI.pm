@@ -26,7 +26,7 @@ has 'harvesthome' => ( is=>'rw', isa=>'Str', default=> $ENV{HARVESTHOME} );
 has 'log' => ( is=>'rw', isa=>'Catalyst::Log', default=>sub {  Baseliner->c->log() } );
 ## Context attributes
 has 'broker' => ( is=>'rw', isa=>'Str', default=>'localhost' );
-has 'login' => ( is=>'rw', isa=>'Str', default=>$ENV{HARVESTHOME}."/scm.dfo" );
+has 'login' => ( is=>'rw', isa=>'Str', default=>"$ENV{HARVESTHOME}/scm.dfo" );
 has 'project' => ( is=>'rw', isa=>'Str' );
 has 'state' => ( is=>'rw', isa=>'Str' );
 

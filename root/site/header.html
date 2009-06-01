@@ -18,7 +18,34 @@
 	<!-- link rel="stylesheet" type="text/css" href="/static/ext/air/resources/ext-air.css" /-->
 
 	<style type="text/css">
+		.tab-style {
+			padding: 10px;
+		}
+.search-item {
+    font:normal 11px tahoma, arial, helvetica, sans-serif;
+    padding:3px 10px 3px 10px;
+    border:1px solid #fff;
+    border-bottom:1px solid #eeeeee;
+    white-space:normal;
+    color:#555;
+}
+.search-item h3 {
+    display:block;
+    font:inherit;
+    font-weight:bold;
+    color:#222;
+}
+
+.search-item h3 span {
+    float: right;
+    font-weight:normal;
+    margin:0 0 5px 5px;
+    width:100px;
+    display:block;
+    clear:none;
+}
 	</style>
+
 
 	<script type="text/javascript" src="<% $c->uri_for('/site/tablegrid.js') %>"></script>
 	<script type="text/javascript" src="<% $c->uri_for('/site/tabfu.js') %>"></script>
@@ -48,8 +75,8 @@ Ext.onReady(function(){
 				defaults: { closable: true, autoScroll: true }, 
 				autoScroll: true, activeTab: 0, 
 				items: 
-% if( $show_main ) {
-				[ {title:'Main', closable: false, autoLoad: '/site/main.html', scripts: true } ]
+% if( $show_main eq '1' ) {
+				[ {title:'Main', closable: false, autoLoad: '/site/main.html', scripts: true, cls: 'tab-style' } ]
 % } else { print 'null' } 
 			}
 		]

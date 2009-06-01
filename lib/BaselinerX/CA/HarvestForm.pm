@@ -13,20 +13,72 @@ register 'config.harvest.form' => {
 	]
 };
 
+# given a formobjid => first row hash
+sub form_data : Private {
+	my ($self,$c, $fid )=@_;
+	my $form = $c->model('Harvest::Harform')->search({ formobjid => $fid })->first;
+	my $table = $form->formtypeobjid->formtablename;
+	# get current data
+	$table =~ s/(_|^)(.)/\U$2/g;
+	my $row = $c->model( 'Harvest::' . $table )->search({ formobjid=>$fid })->first;
+	return $row->get_columns;
+}
 
 use XML::Smart;
 sub parse_form_xml : Private {
 	my ($self,$c)=@_;
 	my $xml;
-	my $id = 'Harform' . $c->req->params->{ID} ;
-	unless(  $xml = $c->cache->get($id) ) {
-		my $rs = $c->model( 'Harvest::Harform' )->search({ formobjid=> $c->req->params->{ID} });
+	my $id = $c->req->params->{ID} || $c->stash->{formobjid};
+	my $cache_id = 'Harform-' . $id;
+	my $xml_cache = $c->cache->get($cache_id);
+	if( $xml_cache ) {
+		$xml = new XML::Smart( $xml_cache );
+	}
+	else {
+		my $rs = $c->model( 'Harvest::Harform' )->search({ formobjid=> $id });
 		my $ft = $rs->first->formtypeobjid->formtypename;
 		my $file = $c->path_to( 'root', 'harform', $ft . ".xml" )	;
 		$xml = new XML::Smart( $file );
-		#$c->cache->set($id, $xml);
+		$c->cache->set($cache_id, $xml->data);
 	}
 	return $xml;
+}
+
+
+=head2 xml_to_grid_columns
+
+	# metadata
+	$c->stash->{formobjid} = $fid;
+	my ($fields, $cols ) = $c->forward( 'BaselinerX::CA::HarvestForm', 'xml_to_grid_columns' );
+	# columns
+    $c->stash->{columns} = js_dumper $cols;
+	# fields 
+    $c->stash->{fields} = js_dumper $fields;
+
+=cut
+sub xml_to_grid_columns : Private {
+	my ($self,$c)=@_;
+	my $xml = $c->forward( 'parse_form_xml' );
+	my @meta;
+	my @fields;
+	my %kkey;
+	for my $key ( $xml->{harvest_form}->order ) {
+		my $f = $xml->{harvest_form}->{$key}[ $kkey{$key}++ ];
+		next if "$f->{dbfield}" eq 'formname';
+		next unless "$f->{label}" ;
+		push @fields, {
+			name => "$f->{dbfield}"
+		};
+		push @meta, 
+          {
+            header    => "$f->{label}",
+            width     => ( $f->{width} || 80 ),
+            dataIndex => "$f->{dbfield}",
+            sortable  => ( "$f->{sortable}" || \1 ),
+            hidden    => ( "$f->{hidden}" || \0 )
+          };
+	}
+	return (\@fields, \@meta) ;
 }
 
 sub xml_to_extjs : Private {

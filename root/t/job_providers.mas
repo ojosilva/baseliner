@@ -1,0 +1,17 @@
+<%args>
+	$callback => ''
+</%args>
+<%perl>
+	use JavaScript::Dumper;
+	print $callback . "(" 
+		. js_dumper({
+		totalCount => 5,
+		data => [
+			{ id=>'1', provider=>'Harvest Packages', item=>'H0001S1010@01', ns=>'/apl/G0001', user=>'ROG2833Z', text=>'Paquete 1.', date=>'2009-10-01' },
+			{ id=>'2', provider=>'Harvest Packages', item=>'H0001S1013@01', ns=>'/apl/G0001',user=>'ROG2833Z',  text=>'Paquete 1.' , date=>'2009-10-01'},
+			{ id=>'3', provider=>'Harvest Packages', item=>'H0001S1014@01', ns=>'/apl/G0001',user=>'ROG2833Z',  text=>'Paquete 1.' , date=>'2009-10-01'},
+			{ id=>'4', provider=>'Releases', item=>'Rv1.002 Harvest y Endevor', ns=>'/rel/G001',user=>'ROG2833Z',  text=>'Paquete 1.' , date=>'2009-10-01'},
+			{ id=>'5', provider=>'Releases', item=>'Rv1.001 Harvest', ns=>'/rel/G0003',user=>'ROG2833Z',  text=>'Release que cambia la func.' , date=>'2009-10-01'},
+		]
+	}) . ");";
+</%perl>

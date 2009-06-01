@@ -1,0 +1,13 @@
+<%perl>
+	use JavaScript::Dumper;
+	my $config = $c->registry->get( 'config.harvest.db.grid.package' );
+    $c->stash->{url_store} = '/t/harpkg.mas';
+    $c->stash->{url_add} = '/job/new';
+    $c->stash->{title} = $c->localize('Harvest Packages');
+
+    $c->stash->{columns} = js_dumper $config->grid_columns;
+    $c->stash->{fields} = js_dumper $config->grid_fields;
+    $c->stash->{ordered_fields} = [$config->column_order];
+	$m->comp('/comp/grid.mas');
+
+</%perl>

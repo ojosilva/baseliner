@@ -40,7 +40,7 @@ register 'config.job' => {
 };
 
 register 'menu.job' => { label => 'Jobs' };
-register 'menu.job.create' => { label => 'Create a new Job', url=>'hello.mas' };
+register 'menu.job.create' => { label => 'Create a new Job', url=>'/t/newjob.mas', title=>'New Job' };
 #register 'menu.job.list' => { label => 'List Current Jobs', url=>'/maqueta/list.mas', title=>'Job Monitor' };
 #register 'menu.job.exec' => { label => 'Exec Current Jobs', url_run=>'/maqueta/list.mas', title=>'Job Monitor' };
 register 'menu.job.hist' => { label => 'Historical Data', handler => 'function(){ Ext.Msg.alert("Hello"); }' };

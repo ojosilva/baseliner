@@ -4,6 +4,14 @@
 			var tab = Ext.getCmp('main-panel').add( div );
 			Ext.getCmp('main-panel').setActiveTab(tab); 
 	};
+	//adds a new object to a tab 
+	Baseliner.addNewTabItem = function( comp, title ) {
+		var tabpanel = Ext.getCmp('main-panel');
+		var tab = tabpanel.add(comp);
+		tab.setTitle( title );
+		tabpanel.setActiveTab(comp);
+	};
+	//adds a new fragment component with html or <script>...</script>
 	Baseliner.addNewTab = function(purl, ptitle){
 			var tab = Ext.getCmp('main-panel').add({ 
 					xtype: 'panel', 
@@ -16,15 +24,13 @@
 	Baseliner.runUrl = function(url) {
 		Ext.get('run-panel').load({ url: url, scripts:true }); 
 	};
-	Baseliner.addNewTabComp = function( purl, ptitle ){
-		var tabpanel = Ext.getCmp('main-panel');
+	//adds a new tab from a function() type component
+	Baseliner.addNewTabComp = function( comp_url, ptitle ){
 		Ext.Ajax.request({
-			url: purl,
+			url: comp_url,
 			success: function(xhr) {
 				var comp = eval(xhr.responseText);
-				var tab = tabpanel.add(comp);
-				tab.setTitle( ptitle );
-				tabpanel.setActiveTab(comp);
+				Baseliner.addNewTabItem( comp, ptitle );
 			},
 			failure: function(xhr) {
 				var win = new Ext.Window({ layout: 'fit', 

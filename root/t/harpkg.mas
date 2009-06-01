@@ -1,0 +1,16 @@
+<%perl>
+	use JavaScript::Dumper;
+	use YAML;
+	my $rs = $c->model('Harvest::Harpackage')->search({ packageobjid => { '>', '0' } });
+	my @data;
+	while( my $row = $rs->next ) {
+		my $form = $row->harassocpkgs->first;
+		my $fid = $form->formobjid->formobjid;
+		my %fdata = BaselinerX::CA::HarvestForm->form_data( $c, $fid );
+		$c->stash->{formobjid} = $fid;
+		my $html = join '', map {  "<li><b>$_</b>: $fdata{$_} " } keys %fdata;   
+		push @data, { $row->get_columns, formdata => $html };
+	}
+	print js_dumper {cat => \@data };
+
+</%perl>

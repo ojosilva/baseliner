@@ -1,0 +1,168 @@
+<%perl>
+
+</%perl>
+<script type='text/javascript'>
+
+Ext.onReady(function(){
+    Ext.QuickTips.init();
+    var bd = Ext.get('jobForm');
+	//------ Tabbed Job Item list 	
+	var pp = new Ext.Panel({
+		id: 'main-view222',
+		title: 'Job Item List',
+		collapsible: true,
+		width: 800,
+		height: 500,
+		items: [  
+			{ xtype:'tabpanel', region: 'center', id:'main-panel',
+				defaults: { closable: true, autoScroll: true }, 
+				autoScroll: true, activeTab: 0 
+			}
+		]
+	});
+
+		Ext.Ajax.request({
+			url: '/t/newjob_json.mas',
+			success: function(xhr) {
+				var comp = eval(xhr.responseText);
+				var tabpanel = Ext.getCmp('main-panel');
+				var tab = tabpanel.add(comp);
+				tab.setTitle( title );
+				tabpanel.setActiveTab(comp);
+			},
+			failure: function(xhr) {
+				var win = new Ext.Window({ layout: 'fit', 
+					autoScroll: true, title: ptitle+' create failed', 
+					height: 600, width: 600, 
+					html: 'Server communication failure:' + xhr.responseText });
+				win.show();
+			}
+		});
+
+    //    bd.createChild({tag: 'h2', html: 'Select the job contents'});
+	//------- Search Combo
+    var colModel = new Ext.grid.ColumnModel([
+        {id:'item',header: "Job Item", width: 160, sortable: true, locked:false, dataIndex: 'item'},
+        {header: "Item Type", width: 125, sortable: true, dataIndex: 'provider'},
+        {header: "User", width: 75, sortable: true, dataIndex: 'user'},
+        {header: "Location", width: 85, sortable: true, dataIndex: 'ns' },
+        {header: "Last Updated", width: 85, sortable: true, dataIndex: 'date' },
+        {header: "Description", width: 350, sortable: true, dataIndex: 'text'}
+    ]);
+    var ds = new Ext.data.Store({});
+
+	var movie_form = new Ext.FormPanel({ 
+			 url: 'movie-form-submit.php', 
+			 renderTo: 'jobForm',
+			 frame: true, 
+			 title: 'Job Options', 
+			 width: 900, 
+			 items: [
+			  { 
+				xtype: 'textfield', 
+				fieldLabel: 'Baseline', 
+				width: 50,
+				name: 'bl' 
+			  },
+			  { 
+				xtype: 'textarea', 
+				fieldLabel: 'Comments', 
+				width: 500,
+				name: 'comments' 
+			  },
+			  { 
+				xtype: 'datefield', 
+				fieldLabel: 'Date', 
+				name: 'job_date' 
+			  },
+			  { 
+				xtype: 'textfield', 
+				fieldLabel: 'Time', 
+				name: 'job_time' 
+			  },
+			  {
+	            xtype: 'grid',
+				width: 800,
+				height: 300,
+				title: 'Job Contents',
+				border: true,
+				ds: ds,
+	            cm: colModel
+			   },
+			   pp
+			  ] 
+		  }); 
+
+    Ext.form.Field.prototype.msgTarget = 'side';
+
+	//-------------
+    var ds_combo = new Ext.data.Store({
+        proxy: new Ext.data.ScriptTagProxy({
+            url: '/t/job_providers.mas'
+        }),
+        reader: new Ext.data.JsonReader({
+            root: 'data',
+            totalProperty: 'totalCount',
+            id: 'id'
+        }, [
+            {name: 'provider', mapping: 'provider'},
+            {name: 'item', mapping: 'item'},
+            {name: 'user', mapping: 'user'},
+            {name: 'ns', mapping: 'ns'},
+            {name: 'date', mapping: 'date'},
+            {name: 'text', mapping: 'text'}
+        ])
+    });
+            // {name: 'lastPost', mapping: 'post_time', type: 'date', dateFormat: 'timestamp'},
+            //'<h3><span>{lastPost:date("M j, Y")}<br />by {author}</span>{title}</h3>',
+
+    // Custom rendering Template
+    var resultTpl = new Ext.XTemplate(
+        '<tpl for="."><div class="search-item">',
+            '<h3><span>{provider}<br />by {user}</span>{item}</h3>',
+            '{text}',
+        '</div></tpl>'
+    );
+    
+    var search = new Ext.form.ComboBox({
+        store: ds_combo,
+        displayField:'item',
+        typeAhead: false,
+        loadingText: 'Searching...',
+        width: 570,
+        pageSize:10,
+        hideTrigger:true,
+        tpl: resultTpl,
+        applyTo: 'search',
+        itemSelector: 'div.search-item',
+        onSelect: function(record){ // override default onSelect to do redirect
+			var values = {};
+			record = new Ext.data.Record(record.data ,0);
+			ds.add(record);
+			
+            //window.location =
+             //   String.format('http://extjs.com/forum/showthread.php?t={0}&p={1}', record.data.topicId, record.id);
+        }
+    });
+
+
+	//-----------------
+
+	//Baseliner.addNewTabItem( movie_form, 'New Job');
+});
+
+</script>
+
+<div class='tab-style' id='jobForm' />
+
+<div class='tab-style' style="width:600px;">
+    <div class="x-box-tl"><div class="x-box-tr"><div class="x-box-tc"></div></div></div>
+    <div class="x-box-ml"><div class="x-box-mr"><div class="x-box-mc">
+        <h3 style="margin-bottom:5px;">Add Job Items</h3>
+        <input type="text" size="40" name="search" id="search" />
+        <div style="padding-top:4px;"> Live search requires a minimum of 4 characters.  </div>
+    </div></div></div>
+    <div class="x-box-bl"><div class="x-box-br"><div class="x-box-bc"></div></div></div>
+</div>
+
+
