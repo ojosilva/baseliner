@@ -1,6 +1,7 @@
 % $m->call_next;
 <%once>
 	use Encode qw( encode_utf8 is_utf8 );
+	use Baseliner::Utils;
 </%once>
 <%filter>
 	# Convert from characters to bytes if necessary.

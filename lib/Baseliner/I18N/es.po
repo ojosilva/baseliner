@@ -1,2 +1,27 @@
+msgid "hello"
+msgstr "jelo"
+
 msgid "Job Monitor"
 msgstr "Monitor de Pases"
+
+msgid "Job Contents"
+msgstr "Contenido del Pase"
+
+msgid "Job Options"
+msgstr "Opciones del Pase"
+
+msgid "Job Monitor"
+msgstr "Monitor de Pases"
+
+msgid "Job Monitor"
+msgstr "Monitor de Pases"
+
+msgid "Job Monitor"
+msgstr "Monitor de Pases"
+
+msgid "Job Monitor"
+msgstr "Monitor de Pases"
+
+msgid "Job Monitor"
+msgstr "Monitor de Pases"
+

@@ -1,0 +1,11 @@
+<pre>
+<%perl>
+	use Baseliner::Utils;
+	##_say "*******LOCA: " . $Bin.'../lib/Baseliner/I18N';
+	print _loc('hello');
+	print _loc('Job Monitor');
+	print $c->localize('Job Monitor');
+</%perl>
+
+
+

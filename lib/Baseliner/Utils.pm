@@ -7,14 +7,17 @@ Some utilities shared by different Baseliner modules and plugins.
 =cut 
 
 use Exporter::Tidy default => [ qw/_loc _log slashFwd slashBack slashSingle _unique _throw _say _now _nowstamp parse_date/ ];
-	
-use Locale::Maketext::Simple (Style => 'gettext');
+use FindBin '$Bin';
+use Locale::Maketext::Simple (
+			Style => 'gettext',
+			Path => $Bin.'/../lib/Baseliner/I18N',
+		);
 use Carp;
 use DateTime;
 use strict;
 
 BEGIN {
-	loc_lang($Baseliner::locale);
+	loc_lang($Baseliner::locale || 'es' );
 }
 
 ## base standard utilities subs

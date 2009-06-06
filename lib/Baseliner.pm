@@ -16,13 +16,13 @@ use Catalyst::Runtime '5.80';
 use parent qw/Catalyst/;
 use Catalyst qw/StackTrace
                 ConfigLoader 
-                I18N
                 CommandLine
 				Authentication
 				Email
 				Cache::FastMmap
 				Session		Session::Store::File	Session::State::Cookie
 				Singleton           
+                I18N
                 Static::Simple/;
 our $VERSION = '0.01';
 #+CatalystX::ListFramework::Builder
@@ -54,12 +54,16 @@ __PACKAGE__->config->{cache}->{expires} = 333600;
 #    password_field => 'password'
 #};
 
-    __PACKAGE__->config(
-        'Plugin::I18N' =>
-            maketext_options => {
-                Decode => 0
-            }
-    );
+use FindBin '$Bin';
+#$c->languages( ['es'] );
+__PACKAGE__->config(
+	'Plugin::I18N' =>
+		maketext_options => {
+			Style => 'gettext',
+			Path => $Bin.'/../lib/Baseliner/I18N',
+			##Decode => 0
+		}
+);
 
 # Start the application
 __PACKAGE__->setup();

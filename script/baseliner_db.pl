@@ -18,7 +18,7 @@ my ($dsn, $user, $pass) = @ARGV;
 eval {
     if (!$dsn) {
         ($dsn, $user, $pass) =
-          @{$config->{'Model::Bali'}->{'connect_info'}};
+          @{$config->{'Model::Baseliner'}->{'connect_info'}};
     };
 };
 if($@){
@@ -32,6 +32,5 @@ my $schema = Baseliner::Schema->connect($dsn, $user, $pass) or
   die "Failed to connect to database";
 
 print "Deploying schema to $dsn\n";
-$schema->deploy;
-
+$schema->deploy({add_drop_table=>1, trace=>1});
 #$schema->create_initial_data();
