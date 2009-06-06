@@ -49,14 +49,45 @@ Ext.onReady(function(){
         {header: "Last Updated", width: 85, sortable: true, dataIndex: 'date' },
         {header: "Description", width: 350, sortable: true, dataIndex: 'text'}
     ]);
-    var ds = new Ext.data.Store({});
-
+    var ds_grid = new Ext.data.Store({});
+	var jc_grid = new Ext.grid.GridPanel({
+			width: 800,
+			height: 300,
+			name: 'jc',
+			title: '<% _loc('Job Contents') %>',
+			border: true,
+			ds: ds_grid,
+			cm: colModel
+	});
 	var movie_form = new Ext.FormPanel({ 
 			 url: 'movie-form-submit.php', 
 			 renderTo: 'jobForm',
 			 frame: true, 
 			 title: 'Job Options', 
 			 width: 900, 
+buttons: [{
+	text: 'Create',
+	handler: function(){
+		var cnt = jc_grid.getStore().getCount();
+		for( i=0; i<cnt; i++) {
+			var r = jc_grid.getStore().getAt(i);
+		}
+		movie_form.getForm().submit({
+			success: function(f,a){
+				Ext.Msg.alert('Success', 'It worked');
+			},
+			failure: function(f,a){
+				Ext.Msg.alert('Warning', 'Error');
+			}
+		});
+	}
+	}, {
+		text: 'Reset',
+		handler: function(){
+		movie_form.getForm().reset();
+	}
+}],
+			 
 			 items: [
 			  { 
 				xtype: 'textfield', 
@@ -80,15 +111,10 @@ Ext.onReady(function(){
 				fieldLabel: 'Time', 
 				name: 'job_time' 
 			  },
-			  {
-	            xtype: 'grid',
-				width: 800,
-				height: 300,
-				title: 'Job Contents',
-				border: true,
-				ds: ds,
-	            cm: colModel
-			   },
+			  { xtype: 'hidden',
+			  	name: 'contents'
+			  },
+			  jc_grid,
 			   pp
 			  ] 
 		  }); 
@@ -136,12 +162,8 @@ Ext.onReady(function(){
         applyTo: 'search',
         itemSelector: 'div.search-item',
         onSelect: function(record){ // override default onSelect to do redirect
-			var values = {};
-			record = new Ext.data.Record(record.data ,0);
-			ds.add(record);
-			
-            //window.location =
-             //   String.format('http://extjs.com/forum/showthread.php?t={0}&p={1}', record.data.topicId, record.id);
+			alert( record.data.item );
+			ds_grid.add(record);
         }
     });
 
