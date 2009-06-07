@@ -1,15 +1,18 @@
 ﻿<%init>
 
 	
+my $loc = DateTime::Locale->load("es_ES"); 
+my $day_wide = $loc->day_format_wide;
 our @week = qw/MON TUE WED THU FRI SAT SUN/;
 #$c->stash->{weekdays} = 
 
+sub hour_to_num {
+	$_=~ s/://g for( @_ );
+}
 sub inside_window {
 	my ($start,$end,$hour)=@_;
+	hour_to_num( $start, $end, $hour );
 	if( $start && $end && $hour ) {
-		##$start = hour_to_int($start);
-		#$end = hour_to_int($end);
-		#$hour = hour_to_int($hour);
 		return ( $hour>=$start && $hour<$end );
 	} else {
 		return 0;
@@ -18,20 +21,20 @@ sub inside_window {
 
 sub get_window {
 	my ($day, $hour)=@_;
-	my $rs = $c->model('balicalendar')->search({ day=>$day });
+	my $rs = $c->model('Baseliner::BaliCalendar')->search({ day=>$day });
 	while( my $win = $rs->next ) {
-		if( inside_window($win->start,$win->end,$hour) ) {
+		if( inside_window($win->start_time,$win->end_time,$hour) ) {
 			return {  
 				type=> $win->type,
 				active=> $win->active,
 				id=> $win->id,
 				day=> $win->day,
-				start=> $win->start,
-				end=> $win->end,
+				start_time=> $win->start_time,
+				end_time=> $win->end_time,
 			}
 		}
 	}
-	return {};
+	return ;
 }
 
 </%init>
@@ -50,7 +53,7 @@ sub get_window {
 		document.infForm.submit();
 	}
 	function editSlot(dia,ini,fin) {
-		window.open("/job/calendar_edit?dia=" + dia + "&ini=" + ini + "&fin=" + fin,
+		window.open("/job/calendar_edit?pdia=day-" + dia + "&pini=" + ini + "&pfin=" + fin,
 				 "ventana_edit",
  				"height=220, width=380, left=400, top=300, location=no, menubar=no, "
 				+ "resizable=no, scrollbars=no, status=no, toolbar=no");
@@ -89,22 +92,13 @@ sub get_window {
 </TD>
 </TR>
 </TABLE>
-
-<%doc>
-		InfVentana iv = new InfVentana();
-		if( !iv.loadVentanas(conn) ) {
-			//no hay ventanas - creo una por lo menos pa que se visualice el grid
-			iv.addVentana("LUN","00:00","24:00","X","-1","1");
-		}
-
-</%doc>
 <DIV style="overflow:auto; height:70%; border-top:0; border-color:maroon; border-left:0; border-right:0; border-bottom:2;border-color:maroon; border-style:solid; background-color:" class=scrollchulo>
 <FORM name="infForm" action="" method="GET">
 <%perl>
 
-		my ( $lastctipo, $ctipo ) = 0;
+		my $lastctipo = ''; my $ctipo = '';
 		my $lastid=-1;
-		my ( $active, $lastactive, $ktipos, $rowspan ) = 0;
+		my $active = my $lastactive = my $ktipos = my $rowspan = 0;
 		my $grid = {};
 		foreach my $dd ( 0..6 ) {
 			my $row = 0;
@@ -128,7 +122,7 @@ sub get_window {
 						if( $ktipos!=0 ) {
 							my $clase = ($lastctipo eq 'N'?"normal":($lastctipo eq 'U'?"urgente":"nopase"));
 							$clase .= $lastactive?"":"Des";
-							my $data = { day=>$dd, id=>$lastid, class=>$clase, rowspan=>"$rowspan", type=>$lastctipo, lasthour=>$lastHora, hour=>$hora };
+							my $data = { day=>$dd, id=>$lastid, class=>$clase, rowspan=>$rowspan, type=>$lastctipo, lasthour=>$lastHora, hour=>$hora };
 							my $rowfinal = $row-$rowspan;
 							$grid->{$dd}->{ $rowfinal } = $data;
 							$rowspan=0;
@@ -155,8 +149,8 @@ sub get_window {
 
 	<TABLE>
 		<TR><TD>&nbsp;</TD>
-% foreach my $dd ( @week ) {
-			<TH width='100'><% $dd %></TH>
+% foreach my $dd ( @{ $day_wide || [] } ) {
+			<TH width='100'><% Encode::encode_utf8( $dd ) %></TH>
 % }
 		</TR>
 <%perl>
@@ -173,9 +167,9 @@ sub get_window {
 						align=center CLASS='$d->{class}' 
 			};
 			if( $d->{type} eq 'X' ) {
-				print qq{ onclick='javascript:editSlot("$d->{day}","$d->{lasthour}","$d->{hour}")'>};
+				print qq{ onclick='javascript: editSlot("$d->{day}","$d->{lasthour}","$d->{hour}")'>};
 			} else {
-				print qq{ onclick='javascript:editId("$d->{id}")'>};
+				print qq{ onclick='javascript: editId("$d->{id}")'>};
 			}	
 			print "$d->{lasthour} - $d->{hour}</TD>";						
 		}
@@ -222,34 +216,6 @@ sub get_window {
 </TD>
 </TR>
 </TABLE>
-<%doc>
-        
-    }
-    catch(SQLException e) {
-        try { out.println( e.getMessage());  } catch(Exception e1) {};
-        e.printStackTrace();
-    }
-    catch(Exception ex) {
-        try { out.println( ex.getMessage());  } catch(Exception e1) {};
-        ex.printStackTrace();
-    }
-	finally {
-	    // Always make sure result sets and statements are closed,
-	    // and the connection is returned to the pool
-	    if (rs != null) {
-	      try { rs.close(); } catch (SQLException e) { ; }
-	      rs = null;
-	    }
-	    if (stmt != null) {
-	      try { stmt.close(); } catch (SQLException e) { ; }
-	      stmt = null;
-	    }
-	    if (conn != null) {
-	      try { conn.close(); } catch (SQLException e) { ; }
-	      conn = null;
-	    }
-	}    
-</%doc>
 </BODY>
 </HTML>
 

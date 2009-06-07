@@ -11,16 +11,22 @@
 </%args>
 <%init>
 
-	
+my $loc = DateTime::Locale->load("es_ES"); 
+my $day_wide = $loc->day_format_wide;
+my $from_to_1 = _loc("From %1 to %2", $day_wide->[0], $day_wide->[4]);
+my $from_to_2 = _loc("From %1 to %2", $day_wide->[0], $day_wide->[6]);
+
 our @week = qw/MON TUE WED THU FRI SAT SUN/;
 #$c->stash->{weekdays} = 
 
+sub hour_to_num {
+	$_=~ s/://g for( @_ );
+}
+sub capitalize { return uc(substr($_[0],0,1)).substr($_[0],1) }
 sub inside_window {
 	my ($start,$end,$hour)=@_;
+	hour_to_num( $start, $end, $hour );
 	if( $start && $end && $hour ) {
-		##$start = hour_to_int($start);
-		#$end = hour_to_int($end);
-		#$hour = hour_to_int($hour);
 		return ( $hour>=$start && $hour<$end );
 	} else {
 		return 0;
@@ -29,22 +35,21 @@ sub inside_window {
 
 sub get_window {
 	my ($day, $hour)=@_;
-	my $rs = $c->model('balicalendar')->search({ day=>$day });
+	my $rs = $c->model('Baseliner::BaliCalendar')->search({ day=>$day });
 	while( my $win = $rs->next ) {
-		if( inside_window($win->start,$win->end,$hour) ) {
+		if( inside_window($win->start_time,$win->end_time,$hour) ) {
 			return {  
 				type=> $win->type,
 				active=> $win->active,
 				id=> $win->id,
 				day=> $win->day,
-				start=> $win->start,
-				end=> $win->end,
+				start_time=> $win->start_time,
+				end_time=> $win->end_time,
 			}
 		}
 	}
 	return '';
 }
-
 
 sub colindantes() {
 		#esta query saca sólo las ventanas con colindantes
@@ -53,54 +58,41 @@ sub colindantes() {
 		#	+  "  WHERE EXISTS( SELECT * FROM DISTVENTANAS dv2  "
 		#	+  "    WHERE (dv.ven_fin=dv2.ven_ini OR dv.ven_ini=dv2.ven_fin) AND dv.ven_tipo=dv2.ven_tipo AND dv.ven_dia=dv2.ven_dia )"
 		#	+  "  ORDER BY DECODE(ven_dia,'LUN',1,'MAR',2,'MIE',3,'JUE',4,'VIE',5,'SAB',6,'DOM',7,8), ven_ini ";
-		my $rs = $c->model('balicalendar')->all;
-		while( my $row = $rs->next )  {
-			my $rs2 = $c->model('balicalendar')->search({ -or => { end=>$row->start, start=>$row->end }, type=>$row->type, day=>$row->day });
-			while( my $row2 = $rs2->next ) {
-				$cc{ $row2->id } = {};
-			}
 
-		}
-		if( rs.next() ) {
-			my ($lastdia,$lasttipo,$realfin,$realini,$realid);
-			my @vecId;
-			do {
-				$id = rs.getString("id");
-				$ini = rs.getString("ven_ini");
-				$fin = rs.getString("ven_fin");
-				$day = rs.getString("ven_dia");
-				$type = rs.getString("ven_tipo");
-				if( ($lastdia eq $dia) && ($lasttipo eq $tipo) ) { #colindan
-					$realfin=$fin;
-					push @vecId, $id;
-				}
-				else {
-					if( $realfin ) {  #hay colindantes
-						deleteVentanas(@vecId);	#borro las que sobran
-						updateVentana($realid,$realini,$realfin); #actualizo a la buena
-						loadVentanas(); #reinicio del vector global de ventanas en memoria
-					}
-					$lastdia=dia;
-					$lasttipo=tipo;
-					$realid=id;
-					$realini=ini;
-					$realfin='';
-					@vecId=();
-				}
-			}  while (rs.next());
-			if( $realfin ) {  #hay colindantes
-				#deleteVentanas(conn,vecId);	#borro las que sobran
-				#updateVentana(conn,realid,realini,realfin); #actualizo a la buena
-				#loadVentanas(conn); #reinicio del vector global de ventanas en memoria
+		# check for windows touching my bottom
+		my $rs = $c->model('Baseliner::BaliCalendar')->search(undef);
+		while( my $row = $rs->next )  {
+			#my $rs2 = $c->model('balicalendar')->search({ -or => { end_time=>$row->start_time, start_time=>$row->end_time }, type=>$row->type, day=>$row->day });
+			my $rs2 = $c->model('Baseliner::BaliCalendar')->search({ start_time=>$row->end_time, type=>$row->type, day=>$row->day });
+			while( my $row2 = $rs2->next ) {
+				$row->end_time( $row2->end_time );
+				$row->update;
+				warn "
+				
+				
+				
+						DEL== " . $row2->id;
+				$row2->delete;
 			}
-			return 1;
 		}
-		return 0;
-	}
-	catch(Exception e) {
-		throw new Exception("colindantes():Error:"+e.getMessage());
-	}
+		# check for windows touching my head
+		my $rs2 = $c->model('Baseliner::BaliCalendar')->search(undef);
+		while( my $row = $rs2->next )  {
+			my $rs3 = $c->model('Baseliner::BaliCalendar')->search({ end_time=>$row->start_time, type=>$row->type, day=>$row->day });
+			while( my $row3 = $rs3->next ) {
+				$row->start_time( $row3->start_time );
+				$row->update;
+				warn "
+					
+
+
+						DEL== " . $row3->id;
+
+				$row3->delete;
+			}
+		}
 }
+
 
 </%init>
 <HTML>
@@ -146,6 +138,8 @@ sub colindantes() {
 <TABLE height="100%" width="100%">
 <TR><TD align=left >
 <%perl>
+warn "********** $pdia,$pini ";
+
 		my @lvDias = qw/LUN MAR MIE JUE VIE/;
 		my @ldDias = qw/LUN MAR MIE JUE VIE SAB DOM/;
 		my @diaList;
@@ -160,7 +154,7 @@ sub colindantes() {
 			if( $cmd eq "B" ) {
 				#delete row
 				if( $id ) {
-					$c->model('balicalendar')->delete({ id=>$id });
+					$c->model('Baseliner::BaliCalendar')->search({ id=>$id })->first->delete;
 					#stmt.executeUpdate("DELETE FROM distventanas WHERE id=" + id);
 					$cierra=1;
 				} else {
@@ -188,30 +182,30 @@ sub colindantes() {
 					} else {			
 
 						unless( $id ) {  #new row
-							$c->model('balicalendar')->create({ day=>$ven_dia, type=>$ven_tipo, start=>$ven_ini, end=>$ven_fin });
+							$c->model('Baseliner::BaliCalendar')->create({ day=>$ven_dia, type=>$ven_tipo, start_time=>$ven_ini, end_time=>$ven_fin });
 							#String SQL="INSERT INTO distventanas( id,ven_dia,ven_tipo,ven_ini,ven_fin) " 
 							#			. "VALUES (distventanaseq.nextval,'"+ven_dia+"','"+ven_tipo+"','"+ven_ini+"','"+ven_fin+"') ";
 						} else {  #existing
-							my $row = $c->model('balicalendar')->search({ id=>$id })->first;
+							my $row = $c->model('Baseliner::BaliCalendar')->search({ id=>$id })->first;
 							$row->day( $ven_dia );
 							$row->type( $ven_tipo );
-							$row->start( $ven_ini );
-							$row->end( $ven_fin );
+							$row->start_time( $ven_ini );
+							$row->end_time( $ven_fin );
 							$row->update;
 							#String SQL = "UPDATE distventanas "
 							#		. " SET ven_dia='"+ven_dia+"',ven_tipo='"+ven_tipo+"' "
 							#		. " ,ven_ini='"+ven_ini+"',ven_fin='"+ven_fin+"' WHERE id=" + id;
 						}
 
-						##colindantes();
+						colindantes();
 						$cierra=1;
 					}
 				}
-			} elsif( $cmd eq "1" || $cmd eq "0" ) {
+			} elsif( $cmd eq "C1" || $cmd eq "C0" ) {
 				#Activar
 				#stmt.executeUpdate("UPDATE distventanas " + " SET ven_activa='"+cmd+"' WHERE id=" + id); 
-				my $row = $c->model('balicalendar')->search({ id=>$id });
-				$row->activa( $cmd );
+				my $row = $c->model('Baseliner::BaliCalendar')->search({ id=>$id })->first;
+				$row->active( substr($cmd,1) );
 				$row->update;
 				$cierra=1;
 			} else {
@@ -235,7 +229,7 @@ sub colindantes() {
 <TABLE cellpadding=0 cellspacing=0 border=0 width="100%">
 <TR><TD>&nbsp;</TD><TD></TD></TR>
 <TR><TD><H4>
-	<% $id ? 'Nueva Ventana' : 'Modificar Ventana' %>
+	<% $id ? _loc('New Window') : _loc('Modify Window') %>
 </H4></TD>
 </TR>
 <TR>
@@ -244,7 +238,7 @@ sub colindantes() {
 </TR>
 </TABLE>
 
-% my $win = $c->model('balicalendar')->search({ id=>$id })->first;
+% my $win = $c->model('Baseliner::BaliCalendar')->search({ id=>$id })->first;
 
 <DIV style="overflow:auto; height:60%; border-top:0; border-color:maroon; border-left:0; border-right:0; border-bottom:2;border-color:maroon; border-style:solid; background-color:" class=scrollchulo>
 <FORM name="infForm" action="" method="GET">
@@ -263,35 +257,31 @@ sub colindantes() {
 			my $cnt = 0;
             my $inicio;
 			my $fin;
-			my $dia;
             my $tipo;
 			if( $pdia ) {
+				$pdia = substr($pdia, 4);
 				$inicio=$pini;
 				$fin=$pfin;
-				$dia=diaToString($pdia);
+				#$dia=$week[$pdia];
 				$tipo="N";
 			} else {
-	            $inicio = $win->start;
-				$fin = $win->end;
-				$dia = $win->day;
+	            $inicio = $win->start_time;
+				$fin = $win->end_time;
+				$pdia = $win->day;
 	            $tipo = $win->type;
 	            $activa = $win->active;
 			}
 </%perl>				
         <TR>
-	      <TH>Día</TH>
+	      <TH><% _loc("Day") %></TH>
 			<TD class="<% $sColor%>" >
 				<SELECT NAME="ven_dia" style="font-weight:bold;">
-					<OPTION VALUE="LUN" <% ($dia eq 'LUN' ?'SELECTED':'') %>>Lunes</OPTION>
-					<OPTION VALUE="MAR" <% ($dia eq 'LUN' ?'SELECTED':'') %>>Martes</OPTION>
-					<OPTION VALUE="MIE" <% ($dia eq 'LUN' ?'SELECTED':'') %>>Miércoles</OPTION>
-					<OPTION VALUE="JUE" <% ($dia eq 'LUN' ?'SELECTED':'') %>>Jueves</OPTION>
-					<OPTION VALUE="VIE" <% ($dia eq 'LUN' ?'SELECTED':'') %>>Viernes</OPTION>
-					<OPTION VALUE="SAB" <% ($dia eq 'LUN' ?'SELECTED':'') %>>Sábado</OPTION>
-					<OPTION VALUE="DOM" <% ($dia eq 'LUN' ?'SELECTED':'') %>>Domingo</OPTION>
+% foreach my $dd ( 0..6 ) {
+					<OPTION VALUE="<% $dd %>" <% ($pdia eq $dd ?'SELECTED':'') %>><% capitalize( $day_wide->[ Encode::encode_utf8( $dd ) ] ) %></OPTION>
+% }
 % unless($id) {  #si es nuevo, se permiten rangos 
-					<OPTION VALUE="L-V" >De Lunes a Viernes</OPTION>
-					<OPTION VALUE="L-D" >De Lunes a Domingo</OPTION>
+					<OPTION VALUE="L-V" ><% $from_to_1 %></OPTION>
+					<OPTION VALUE="L-D" ><% $from_to_2 %></OPTION>
 % }
 				</SELECT>
 			</TD>
@@ -306,7 +296,7 @@ sub colindantes() {
 			</TD>
 		</TR>
 		<TR>
-		  <TH>Hora Inicio</TH>
+		  <TH><% _loc('Starts at') %></TH>
 			<TD class="<% $sColor%>" >
 				<SELECT NAME="ven_ini"> 
 <%perl>
@@ -322,7 +312,7 @@ sub colindantes() {
 			</TD>
 		</TR>
 		<TR>
-          <TH>Hora Fin</TH>
+          <TH><% _loc('Ends at') %></TH>
 			<TD class="<% $sColor %>" align="left">
 				<SELECT NAME="ven_fin">
 <%perl>
@@ -353,9 +343,9 @@ sub colindantes() {
 % unless( $pdia ) { #las ventanas cerradas no se borran 
 <INPUT TYPE=BUTTON ID="botonBorrar" onclick="goModificar('B')" VALUE="Borrar" CLASS="boton"></INPUT>
 %   if( $activa ) {
-		<INPUT TYPE=BUTTON ID="botonDesactivar" onclick="goModificar('0')" VALUE="Desactivar" CLASS="boton"></INPUT>
+		<INPUT TYPE=BUTTON ID="botonDesactivar" onclick="goModificar('C0')" VALUE="Desactivar" CLASS="boton"></INPUT>
 %   } else { 
-		<INPUT TYPE=BUTTON ID="botonActivar" onclick="goModificar('1')" VALUE="Activar" CLASS="boton"></INPUT>
+		<INPUT TYPE=BUTTON ID="botonActivar" onclick="goModificar('C1')" VALUE="Activar" CLASS="boton"></INPUT>
 % 	} 
 % }
 <INPUT TYPE=BUTTON onclick="window.close()" VALUE="Cancelar" CLASS="boton"></INPUT>
