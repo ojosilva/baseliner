@@ -1,0 +1,95 @@
+<%init>
+	my $id = 'jj-calendar-' . rand;  ## makes a random id that we can refresh later
+	my $cal = $c->stash->{calendar};
+</%init>
+(function(){
+	var ns_store = new Ext.data.SimpleStore({ 
+	   fields: ['value', 'name'], 
+	   data : <% js_dumper( [ ['/', 'General' ] ] ) %>
+	}); 
+	var bl_store = new Ext.data.SimpleStore({ 
+	   fields: ['value', 'name'], 
+	   data : <% js_dumper( [ ['*', _loc('All') ] ] ) %>
+	}); 
+	var cal_form = new Ext.FormPanel({
+				url: '/job/calendar_update',
+				frame: true,
+				title: 'Calendar Info',
+				width: 500,
+				height: 300,
+				autoHeight: true,
+				autoWidth: true,
+				defaults: { width: 300 },
+				buttons: [
+					{  text: '<% _loc('Update') %>',
+						handler: function(){ 
+							var ff = cal_form.getForm();
+							ff.submit({
+								success: function(form, action) { Ext.Msg.alert("Ok", action.result.msg); },
+								failure: function(form, action) { Ext.Msg.alert("Failure", action.result.msg); }
+							});
+						} 
+					}
+				],
+				items: [
+					{  xtype: 'hidden', name: 'id_cal', value: '<% $cal->id %>' },
+					{  xtype: 'textfield',
+						fieldLabel: '<% _loc('Name') %>',
+						name: 'name',
+						value: '<% $cal->name %>'
+					},
+					{  xtype: 'textarea',
+						fieldLabel: '<% _loc('Description') %>',
+						name: 'description',
+						value: '<% $cal->description %>'
+					},
+					{  xtype: 'combo', 
+							   name: 'ns', 
+							   hiddenName: 'ns',
+							   fieldLabel: 'Namespace', 
+							   mode: 'local', 
+							   editable: false,
+							   forceSelection: true,
+							   triggerAction: 'all',
+							   store: ns_store, 
+							   valueField: 'value',
+							   value: '<% $cal->ns  %>',
+							   displayField:'name', 
+							   allowBlank: false
+					},
+					{  xtype: 'combo', 
+							   name: 'bl', 
+							   hiddenName: 'bl',
+							   fieldLabel: 'Baseline',
+							   mode: 'local', 
+							   editable: false,
+							   forceSelection: true,
+							   triggerAction: 'all',
+							   store: bl_store, 
+							   valueField: 'value',
+							   value: '<% $cal->bl  %>',
+							   displayField:'name', 
+							   allowBlank: false
+					}
+				]
+	});
+
+	var panel = new Ext.Panel({
+		layout: 'fit',
+		style: 'padding: 20px',
+		items: [
+			cal_form,
+			{  xtype: 'panel',
+				title: 'Calendar Windows',
+				style: 'margin-top: 20px',
+				frame: true,
+				width: 700,
+				items: [{  xtype: 'panel', id: '<% $id %>', layout: 'fit',
+					autoLoad: { url: '/job/calendar_show', params: { panel: '<% $id %>', id_cal: '<% $c->stash->{id_cal} %>' }, scripts: true  }
+				}]
+			}
+		]
+	});
+	return panel;
+})();
+

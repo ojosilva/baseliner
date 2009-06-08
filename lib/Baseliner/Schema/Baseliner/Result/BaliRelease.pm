@@ -30,13 +30,18 @@ __PACKAGE__->add_columns(
     size => 2000,
   },
   "active",
-  { data_type => "CHAR", default_value => 1, is_nullable => 0, size => 1 },
+  {
+    data_type => "CHAR",
+    default_value => "1                     ",
+    is_nullable => 0,
+    size => 1,
+  },
 );
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.04005 @ 2009-05-28 21:39:26
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:e70tsHwMG04rO4n8ZgSAew
+# Created by DBIx::Class::Schema::Loader v0.04005 @ 2009-06-08 21:15:46
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:/fjqng45lTHkDDgf8K+AMQ
 
 
 # You can replace this text with custom content, and it will be preserved on regeneration

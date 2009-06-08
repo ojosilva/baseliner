@@ -3,7 +3,7 @@ package Baseliner;
 use strict;
 use warnings;
 
-use Catalyst::Runtime '5.80';
+use Catalyst::Runtime '5.70';
 
 # Set flags and add plugins for the application
 #
@@ -61,7 +61,6 @@ __PACKAGE__->config(
 		maketext_options => {
 			Style => 'gettext',
 			Path => $Bin.'/../lib/Baseliner/I18N',
-			##Decode => 0
 		}
 );
 

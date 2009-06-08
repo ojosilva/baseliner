@@ -9,27 +9,51 @@ __PACKAGE__->load_components("InflateColumn::DateTime", "Core");
 __PACKAGE__->table("bali_calendar");
 __PACKAGE__->add_columns(
   "id",
-  { data_type => "INTEGER", is_nullable => 0, size => undef },
+  {
+    data_type => "NUMBER",
+    default_value => undef,
+    is_nullable => 0,
+    size => 126,
+  },
+  "name",
+  {
+    data_type => "VARCHAR2",
+    default_value => undef,
+    is_nullable => 0,
+    size => 100,
+  },
   "ns",
-  { data_type => "VARCHAR", is_nullable => 0, size => undef },
+  {
+    data_type => "VARCHAR2",
+    default_value => undef,
+    is_nullable => 0,
+    size => 100,
+  },
   "bl",
-  { data_type => "VARCHAR", is_nullable => 0, size => undef },
-  "start",
-  { data_type => "VARCHAR", is_nullable => 0, size => undef },
-  "end",
-  { data_type => "VARCHAR", is_nullable => 0, size => undef },
-  "day",
-  { data_type => "VARCHAR", is_nullable => 0, size => undef },
-  "type",
-  { data_type => "VARCHAR", is_nullable => 0, size => undef },
-  "active",
-  { data_type => "CHAR", is_nullable => 0, size => undef },
+  {
+    data_type => "VARCHAR2",
+    default_value => "'*' ",
+    is_nullable => 0,
+    size => 100,
+  },
+  "description",
+  {
+    data_type => "VARCHAR2",
+    default_value => undef,
+    is_nullable => 1,
+    size => 1024,
+  },
 );
 __PACKAGE__->set_primary_key("id");
+__PACKAGE__->has_many(
+  "bali_calendar_windows",
+  "Baseliner::Schema::Baseliner::Result::BaliCalendarWindow",
+  { "foreign.id_cal" => "self.id" },
+);
 
 
-# Created by DBIx::Class::Schema::Loader v0.04005 @ 2009-05-13 11:52:50
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:fHVfqUowmEutFO9J40mUfg
+# Created by DBIx::Class::Schema::Loader v0.04005 @ 2009-06-08 21:15:46
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:2x2aV8DeH/Q6uzi/ZOJr2g
 
 
 # You can replace this text with custom content, and it will be preserved on regeneration

@@ -1,6 +1,7 @@
 package BaselinerX::Job::Calendar;
 use Baseliner::Plug;
 use Baseliner::Utils;
+use JavaScript::Dumper;
 BEGIN { extends 'Catalyst::Controller' };
 
 {
@@ -15,248 +16,327 @@ BEGIN { extends 'Catalyst::Controller' };
 	no Moose;
 }
 
-our @week = qw/MON TUE WED THU FRI SAT SUN/;
+register 'menu.job.calendar' => { label => 'Edit Job Calendars', url_comp=>'/job/calendar_list', title=>_loc('Job Calendars') };
 
-sub calendar : Path( '/calendar' ) {
+register 'config.job.calendar' => {
+	metadata=> [
+		{ id=>'name', label => 'Calendar', type=>'text', width=>200 },
+		{ id=>'ns', label => 'Namespace', type=>'text', width=>300 },
+		{ id=>'ns_desc', label => 'Namespace Description', type=>'text', width=>300 },
+	],
+};
+
+
+sub calendar_list_json : Path('/job/calendar_list_json')  {
+    my ( $self, $c ) = @_;
+	my $p = $c->request->parameters;
+	my $rs = $c->model('Baseliner::BaliCalendar')->search();
+	my @rows;
+	while( my $r = $rs->next ) {
+		push @rows, { id=>$r->id, name=>$r->name, description=>$r->description, bl=>$r->bl, ns=>$r->ns, ns_desc=>'Harvest Project'  };
+	}
+	$c->stash->{json} = { cat => \@rows };		
+	$c->forward('View::JSON');
+}
+
+sub calendar_list : Path('/job/calendar_list')  {
+    my ( $self, $c ) = @_;
+    $c->stash->{template} = '/comp/job_calendar_grid.mas';
+}
+
+sub calendar_add : Path( '/job/calendar_add' ) {
 	my ( $self, $c ) = @_;
-	$c->stash->{windows} = new BaselinerX::Calendar::Window();
-	$c->stash->{template} = '/comp/calendar.mas';
+	$c->stash->{template} = '/comp/job_calendar_comp.mas';
+}
+
+sub calendar_update : Path( '/job/calendar_update' ) {
+	my ( $self, $c ) = @_;
+	my $p = $c->req->params;
+	eval {
+		if( $p->{action} eq 'create' ) {
+			my $row = $c->model('Baseliner::BaliCalendar')->create({
+				name => $p->{name},
+				description => $p->{description},
+				ns => $p->{ns},
+				bl => $p->{bl},
+			});
+		} elsif( $p->{action} eq 'delete' ) {
+			my $row = $c->model('Baseliner::BaliCalendar')->search({id=>$p->{id_cal}});
+			$row->delete;
+		} else {
+			my $row = $c->model('Baseliner::BaliCalendar')->search({ id=>$p->{id_cal}})->first;
+			$row->name( $p->{name} );
+			$row->description( $p->{description} );
+			$p->{ns} and $row->ns( $p->{ns} );
+			$p->{bl} and $row->bl( $p->{bl} );
+			$row->update;
+		}
+	};
+	if( $@ ) {
+		$c->stash->{json} = { success => \0, msg => _loc("Error modifying the calendar: %1", $@) };
+	} else {
+		$c->stash->{json} = { success => \1, msg => _loc("Calendar modified.") };
+	}
+	$c->forward('View::JSON');	
+}
+
+sub calendar : Path( '/job/calendar' ) {
+	my ( $self, $c ) = @_;
+	my $id_cal = $c->stash->{id_cal} = $c->req->params->{id_cal};
+	# load the calendar row data
+	$c->stash->{calendar} = $c->model('Baseliner::BaliCalendar')->search({ id => $id_cal })->first;
+	$c->stash->{template} = '/comp/job_calendar_comp.mas';
+}
+
+sub calendar_show : Path( '/job/calendar_show' ) {
+	my ( $self, $c ) = @_;
+	my $id_cal = $c->stash->{id_cal} = $c->req->params->{id_cal};
+	# get the panel id to be able to refresh it
+	$c->stash->{panel} = $c->req->params->{panel};
+	# load the calendar row data
+	$c->stash->{calendar} = $c->model('Baseliner::BaliCalendar')->search({ id => $id_cal })->first;
+	# prepare the html grid data
+	$c->stash->{grid} = $c->forward( __PACKAGE__, 'grid'); 
+	$c->stash->{template} = '/comp/job_calendar.mas';
 }
 
 sub calendar_edit : Path( '/job/calendar_edit' ) {
 	my ( $self, $c ) = @_;
-	$c->stash->{template} = '/t/calendar_edit.mas';
+	my $p = $c->req->params;
+	$c->stash->{panel} = $p->{panel};
+	my $id = $p->{id};
+	my $id_cal = $p->{id_cal};
+	my $win = $c->model('Baseliner::BaliCalendarWindow')->search({ id=>$id })->first;
+	my $pdia = $p->{pdia};
+	my $activa = 0;
+	if (!$win && !$pdia ) {
+		$c->stash->{not_found} = 1;
+	} else {
+		my $inicio;
+		my $dia;
+		my $fin;
+		my $tipo;
+		if( $pdia ) { # new window
+			$c->stash->{create} = 1;
+			$dia = substr($pdia, 4);
+			$inicio=$p->{pini};
+			$fin=$p->{pfin};
+			$tipo="N";
+		} else {  # existing window
+			$inicio = $win->start_time;
+			$fin = $win->end_time;
+			$dia = $win->day;
+			$tipo = $win->type;
+			$activa = $win->active;
+		}
+		$c->stash->{id} = $id;
+		$c->stash->{id_cal} = $id_cal;
+		$c->stash->{dia} = $dia;
+		$c->stash->{inicio} = $inicio;
+		$c->stash->{fin} = $fin;
+		$c->stash->{tipo} = $tipo;
+		$c->stash->{activa} = $activa;
+	}
+	$c->stash->{template} = '/comp/job_calendar_edit.mas';
 }
 
-=head 
+sub calendar_submit : Path('/job/calendar_submit') {
+	my ( $self, $c ) = @_;
+	my $p = $c->req->params;
+	my $id_cal = $p->{id_cal};
+	my $cierra = 0;
+	my $id = $p->{id};
+	my $cmd = $p->{cmd};
+	my $ven_dia = $p->{ven_dia};
+	my $ven_ini = $p->{ven_ini};
+	my $ven_fin = $p->{ven_fin};
+	my $ven_tipo= $p->{ven_tipo};
 
-	my $windows = $c->stash->{windows};  ## get the window object
-	my ( $ctype, $lastctype, $active, $lastactive );
-	my $lastid = -1;
-	for my $dd ( 0..6 ) {
-		my $row = 0;
-		my $rowspan = 0;
-		my $last_hour = "00:00";
-		my $hour = "";
-		for my $hh ( 0..23 ) {
-			for ( my $mm=0; $mm<60; $mm+=30 ) {
-				next if(  $hh>=24 && $mm>0 );
-				my $hour = sprintf( "%02d:%02d", $hh, $mm );
-				my $win = $windows->get( $dd, $hour );
-				my $id = -1;
-				$ctype = 'X';
-				$active = 0;
-				if( $win ) {
-					$ctype = $win->type();
-					$id = $win->id;
+	eval {
+		my @diaList;
+		if( $ven_dia eq "L-V" ) {
+			my @diaList=(0..4)
+		} elsif( $ven_dia eq "L-D" ) {
+			my @diaList=(0..6);
+		} else {
+			push @diaList, $ven_dia;
+		}
+		foreach my $ven_dia ( @diaList ) {
+			if( $cmd eq "B" ) {
+				#delete row
+				if( $id ) {
+					$c->model('Baseliner::BaliCalendarWindow')->search({ id=>$id })->first->delete;
+					#stmt.executeUpdate("DELETE FROM distventanas WHERE id=" + id);
+					$cierra=1;
+				} else {
+					print("<H5>Error: id '$id' de ventana no encontrado.</H5>"); 
 				}
+			}
+			elsif( $cmd eq "A" ) {
+				#InfVentana.Ventana ven=iv.getVentanaRec(ven_dia,ven_ini);
+				my $ven = get_window( $id_cal, $ven_dia, $ven_ini );
+
+				if( ref $ven && !($id eq $ven->{id}) && !("X" eq $ven->{tipo}) && !($ven_ini eq $ven->{fin}) ) {
+					#Inicio está en una ventana ya existente
+					print("<h5>Error: la hora de inicio de ventana ($ven_ini) se solapa con la siguiente ventana:<br>"
+							. "<li>DIA=".$ven->{dia}. "<li>INICIO=".$ven->{start}
+							."<li>FIN=". $ven->{fin} . "<li>TIPO=".$ven->{tipo} . " </h5>"); 
+				} else {
+					#ven=iv.getVentanaRec(ven_dia,ven_fin);
+					$ven = get_window( $id_cal,$ven_dia, $ven_ini );
+
+					if( $ven && !($id eq $ven->{id}) && !("X" eq $ven->{tipo}) && !($ven_fin eq $ven->{start}) ) { 
+						#Fin está en una ventana ya existente
+						print("<h5>Error: la hora de fin de ventana ($ven_fin) se solapa con la siguiente ventana: "
+								. "<li>DIA=".$ven->{dia}. "<li>INICIO=".$ven->{start}
+								."<li>FIN=". $ven->{fin} . "<li>TIPO=".$ven->{tipo} . " </h5>"); 
+					} else {			
+						unless( $id ) {  #new row
+							$c->model('Baseliner::BaliCalendarWindow')->create({ day=>$ven_dia, type=>$ven_tipo, start_time=>$ven_ini, end_time=>$ven_fin });
+						} else {  #existing
+							my $row = $c->model('Baseliner::BaliCalendarWindow')->search({ id=>$id })->first;
+							$row->day( $ven_dia );
+							$row->type( $ven_tipo );
+							$row->start_time( $ven_ini );
+							$row->end_time( $ven_fin );
+							$row->update;
+						}
+
+						$c->forward( '/colindantes' );
+						$cierra=1;
+					}
+				}
+			} elsif( $cmd eq "C1" || $cmd eq "C0" ) {
+				#Activar
+				my $row = $c->model('Baseliner::BaliCalendarWindow')->search({ id=>$id })->first;
+				$row->active( substr($cmd,1) );
+				$row->update;
+				$cierra=1;
+			} else {
+				print("<h5>Error: Comando desconocido o incompleto.</h5>");
+			}
+
+			last unless( $cierra )
+		}
+	};
+	if( $@ ) {
+		$c->stash->{json} = { success => \0, msg => _loc("Error modifying the calendar: %1", $@) };
+	} else {
+		$c->stash->{json} = { success => \1, msg => _loc("Calendar modified.") };
+	}
+	$c->forward('View::JSON');	
+}
+
+sub grid : Private {
+	my ($self,$c)=@_;
+	my $id_cal = $c->stash->{id_cal};
+	my $grid = {};
+	my $lastctipo = ''; my $ctipo = '';
+	my $lastid=-1;
+	my $active = my $lastactive = my $ktipos = my $rowspan = 0;
+	foreach my $dd ( 0..6 ) {
+		my $row = 0;
+		my $rowspan=0;
+		my  $lastHora="00:00";
+		my $hora="";
+		foreach my $hh ( 0..23 ) {
+			for(my $mm=0; $mm<60; $mm+=30) {
+				last if( $hh>=24 && $mm>0 );
+				$hora = sprintf("%02d:%02d", $hh, $mm);
+				my $ven = get_window($id_cal,$dd, $hora );
+				my $id = -1;
+				$ctipo='X';
+				$active=0;
+				if($ven) {  
+					$ctipo = $ven->{type};
+					$id = $ven->{id};
+					$active = $ven->{active};
+				}
+				if( $lastctipo ne $ctipo ) {
+					if( $ktipos!=0 ) {
+						my $clase = ($lastctipo eq 'N'?"normal":($lastctipo eq 'U'?"urgente":"nopase"));
+						$clase .= $lastactive?"":"Des";
+						my $data = { day=>$dd, id=>$lastid, class=>$clase, rowspan=>$rowspan, type=>$lastctipo, lasthour=>$lastHora, hour=>$hora };
+						my $rowfinal = $row-$rowspan;
+						$grid->{$dd}->{ $rowfinal } = $data;
+						$rowspan=0;
+					}
+					$lastctipo=$ctipo;
+					$lastid=$id;
+					$lastactive=$active;
+					$lastHora=$hora; 
+					$ktipos++;
+				}
+				$rowspan++; #cuenta cuantas filas han pasado, para el rowspan
+					$row++;
+			}
+		}
+		unless( $lastHora eq "24:00" ) {
+			my $clase = ($lastctipo eq 'N' ? "normal":($lastctipo eq 'U'?"urgente":"nopase"));
+			$clase .= $lastactive?'':'Des';
+			my $data = { day=>$dd, id=>$lastid, class=>$clase, rowspan=>$rowspan, type=>$lastctipo, lasthour=>$lastHora, hour=>"24:00" };
+			my $rowfinal = $row-$rowspan;
+			$grid->{$dd}->{ $rowfinal } = $data;
+		}
+	} #"
+	return $grid;
+}
+
+sub get_window {
+	my ($id_cal, $day, $hour)=@_;
+	my $rs = Baseliner->model('Baseliner::BaliCalendarWindow')->search({ id_cal=>$id_cal, day=>$day });
+	while( my $win = $rs->next ) {
+		if( inside_window($win->start_time,$win->end_time,$hour) ) {
+			return {  
+				type=> $win->type,
+				active=> $win->active,
+				id=> $win->id,
+				day=> $win->day,
+				start_time=> $win->start_time,
+				end_time=> $win->end_time,
 			}
 		}
 	}
-sub inside {
-	my ($start,$end,$hour);
+	return ;
+}
+
+sub colindantes : Private {
+	my ($self,$c)=@_;
+	# check for windows touching my bottom
+	my $rs = $c->model('Baseliner::BaliCalendarWindow')->search(undef);
+	while( my $row = $rs->next )  {
+		#my $rs2 = $c->model('balicalendar')->search({ -or => { end_time=>$row->start_time, start_time=>$row->end_time }, type=>$row->type, day=>$row->day });
+		my $rs2 = $c->model('Baseliner::BaliCalendarWindow')->search({ start_time=>$row->end_time, type=>$row->type, day=>$row->day });
+		while( my $row2 = $rs2->next ) {
+			$row->end_time( $row2->end_time );
+			$row->update;
+			$row2->delete;
+		}
+	}
+	# check for windows touching my head
+	my $rs2 = $c->model('Baseliner::BaliCalendarWindow')->search(undef);
+	while( my $row = $rs2->next )  {
+		my $rs3 = $c->model('Baseliner::BaliCalendarWindow')->search({ end_time=>$row->start_time, type=>$row->type, day=>$row->day });
+		while( my $row3 = $rs3->next ) {
+			$row->start_time( $row3->start_time );
+			$row->update;
+			$row3->delete;
+		}
+	}
+}
+
+sub hour_to_num {
+	$_=~ s/://g for( @_ );
+}
+
+sub inside_window {
+	my ($start,$end,$hour)=@_;
+	hour_to_num( $start, $end, $hour );
 	if( $start && $end && $hour ) {
-		$ini = hour_to_int($start);
-		$fin = hour_to_int($end);
-		$hora = hour_to_int($hour);
-		return ( $hora>=$ini && $hora<$fin );
+		return ( $hour>=$start && $hour<$end );
 	} else {
 		return 0;
 	}
 }
-
-sub get_rec {
-	my ($day, $hour); 
-	Ventana ret=null;
-	//busco en las filas de la tabla DISTVENTANAS si está este dia+hora 
-	for($i=0;i<ventanas.size();i++) {
-		Ventana v = (Ventana) ventanas.get(i);
-		$s_vdia = v->dia;
-		$s_vini = v->ini;
-		$s_vfin = v->fin;
-		if( s_vdia.equalsIgnoreCase(s_dia) ) {
-			if( enVentana(s_vini,s_vfin,$hour) ) {
-				ret=v;
-			}
-		}
-	}
-	return ret;	    
-}		
-	
-sub get {
-	my ($id);
-	Ventana ret=null;
-	if( id!=null && id.length()>0 ) {
-		# search for day-time in the calendar table
-		for($i=0;i<ventanas.size();i++) {
-			Ventana v = (Ventana) ventanas.get(i);
-			$s_vid = v.id;
-			if( id.equalsIgnoreCase(v.id) ) {
-				ret=v;
-			}
-		}
-	}
-	return ret;	    
-}	
-
-sub getVentana {
-	my ($day, $hour);
-	Ventana ret=null;
-	//busco en las filas de la tabla DISTVENTANAS si está este dia+hora 
-	for($i=0;i<ventanas.size();i++) {
-		Ventana v = (Ventana) ventanas.get(i);
-		if( v.dia!=null ) {
-			$i_vdia = diaToInt(v.dia);
-			if( i_vdia==dia ) {
-				if( enVentana(v.ini,v.fin,$hour) ) {
-					ret=v;
-				}
-			}
-		}
-	}
-	return ret;
-}
-
-sub loadVentanas {
-	try {
-		Statement stmt=conn.createStatement();
-		$SQL = "SELECT id,ven_ini,ven_fin,ven_dia,ven_tipo,ven_activa " 
-			+ "  FROM distventanas "
-			+ " WHERE 1=1 "
-			+ " ORDER BY DECODE(ven_dia,'LUN',1,'MAR',2,'MIE',3,'JUE',4,'VIE',5,'SAB',6,'DOM',7,8) "
-			+ "  , ven_ini ";
-		ResultSet rs = stmt.executeQuery( SQL );
-		ventanas=new Vector();  //reinicio del vector
-		if( rs.next() ) {
-			do {
-				$inicio = rs.getString("ven_ini");
-				$fin = rs.getString("ven_fin");
-				$day = rs.getString("ven_dia");
-				$ven_id = rs.getString("id");
-				$type = rs.getString("ven_tipo");
-				$active = rs.getString("ven_activa");
-				addVentana(dia,inicio,fin,tipo,ven_id,activa);
-			}  while (rs.next());
-			if( rs!=null) rs.close();
-			return true;
-		}
-		if(stmt!=null) stmt.close();
-		return 0;
-	}
-	catch(Exception e) {
-		//nada que hacer
-		throw e;
-	}
-}
-
-sub colindantes(Connection conn) throws Exception {
-	try {
-		Statement stmt=conn.createStatement();
-		//esta query saca sólo las ventanas con colindantes
-		$SQL = " SELECT ID,ven_ini,ven_fin,ven_dia,ven_tipo "
-			+  "   FROM DISTVENTANAS dv"
-			+  "  WHERE EXISTS( SELECT * FROM DISTVENTANAS dv2  "
-			+  "    WHERE (dv.ven_fin=dv2.ven_ini OR dv.ven_ini=dv2.ven_fin) AND dv.ven_tipo=dv2.ven_tipo AND dv.ven_dia=dv2.ven_dia )"
-			+  "  ORDER BY DECODE(ven_dia,'LUN',1,'MAR',2,'MIE',3,'JUE',4,'VIE',5,'SAB',6,'DOM',7,8), ven_ini ";
-		ResultSet rs = stmt.executeQuery( SQL );
-		if( rs.next() ) {
-			$lastdia="",lasttipo="",realfin=null,realini=null,realid=null;
-			Vector vecId=new Vector(); 
-			do {
-				$id = rs.getString("id");
-				$ini = rs.getString("ven_ini");
-				$fin = rs.getString("ven_fin");
-				$day = rs.getString("ven_dia");
-				$type = rs.getString("ven_tipo");
-				if( lastdia.equals(dia) && lasttipo.equals(tipo) ) {
-					//colindan
-					realfin=fin;
-					vecId.add(id);
-				}
-				else {
-					if( realfin!=null ) {  //hay colindantes
-						deleteVentanas(conn,vecId);	//borro las que sobran
-						updateVentana(conn,realid,realini,realfin); //actualizo a la buena
-						loadVentanas(conn); //reinicio del vector global de ventanas en memoria
-					}
-					lastdia=dia;
-					lasttipo=tipo;
-					realid=id;
-					realini=ini;
-					realfin=nul;
-					vecId.clear();
-				}
-			}  while (rs.next());
-			if( realfin!=null ) {  //hay colindantes
-				deleteVentanas(conn,vecId);	//borro las que sobran
-				updateVentana(conn,realid,realini,realfin); //actualizo a la buena
-				loadVentanas(conn); //reinicio del vector global de ventanas en memoria
-			}
-			if( rs!=null) rs.close();
-			return true;
-		}
-		if(stmt!=null) stmt.close();
-		return 0;
-	}
-	catch(Exception e) {
-		throw new Exception("colindantes():Error:"+e.getMessage());
-	}
-}
-
-sub update {
-	my ($self, $c, $id, $start, $end )=@_;
-	$c->model('Baseliner::Calendar')->update({ id=>$id, start=>$start, end=>$end });
-}	
-
-sub delete {
-	my ($self, $c, @id )=@_;
-	$c->model('Baseliner::Calendar')->delete({ id=>\@id});
-}
-
-sub add {
-	my ($self, $c, $day, $start, $end, $type, $id, $active)=@_;
-	Ventana v = new Ventana();
-	v.dia=dia;
-	v.ini=$start;
-	v.fin=$end;
-	v.tipo=tipo;
-	v.id=id;
-	v.activa=(activa!=null && activa.equals("1")?true:false);
-	ventanas.add(v);
-}
-
-sub diaToInt( $day ) {
-	for($i=0; i<7; i++) {
-		if( dia.equalsIgnoreCase(semana[i]) ) {
-			return i;
-		}
-	}
-	return -1;
-}
-sub diaToString( $day ) {
-	if( dia>=0 && dia<=6 )
-		return semana[dia];
-	else 
-		return "???";
-}
-
-sub hour_to_int( $hora ) {
-	return substr( $_[0], 0,2 ).substr( $_[0], 3,2 );
-}
-
-sub pushGrid($day,$td) {
-	grid[dia].addElement(td);
-}
-sub popGrid($day) {
-	$td = null;
-	try {
-		if( igrid[dia] < grid[dia].size() ) {
-			td=grid[dia].get(igrid[dia]++).toString();
-		}
-	} catch(Exception e) {
-	}
-	return td;
-}
-=cut
 
 1;

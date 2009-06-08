@@ -1,0 +1,46 @@
+/*  Job Items Search */
+.tab-style {
+	padding: 10px;
+}
+.search-item {
+    font:normal 11px tahoma, arial, helvetica, sans-serif;
+    padding:3px 10px 3px 10px;
+    border:1px solid #fff;
+    border-bottom:1px solid #eeeeee;
+    white-space:normal;
+    color:#555;
+}
+.search-item h3 {
+    display:block;
+    font:inherit;
+    font-weight:bold;
+    color:#222;
+}
+
+.search-item h3 span {
+    float: right;
+    font-weight:normal;
+    margin:0 0 5px 5px;
+    width:100px;
+    display:block;
+    clear:none;
+}
+
+/* Calendar */
+.job-calendar h1 { font-size: 12pt; font-weight: bold; text-transform: capitalize }
+.job-calendar th { font-size: 12pt; font-weight: bold; text-transform: capitalize }
+.job-calendar td { font-size: 9pt; }
+td.normal { background-color: #70E080; }
+td.urgente { background-color: #F08080; }
+td.nopase { background-color: #D0D0D0; }
+td.normalHover { background-color: #80C080; }
+td.urgenteHover { background-color: #C08080; }
+td.nopaseHover { background-color: #B0B0B0; }
+td.normalDes { background-color: #A0B0A0; }
+td.urgenteDes { background-color: #B0A0A0; }
+td.nopaseDes { background-color: #E0E0E0; }
+td.normalDesHover { background-color: #80C080; }
+td.urgenteDesHover { background-color: #C08080; }
+td.nopaseDesHover { background-color: #B0B0B0; }
+.job-calendar .boton {  }
+.job-calendar select { width: 160px; }

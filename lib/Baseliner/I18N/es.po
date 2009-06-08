@@ -1,6 +1,60 @@
 msgid "hello"
 msgstr "jelo"
 
+msgid "Job Type"
+msgstr "Tipo de Pase"
+
+msgid "Job Item"
+msgstr ""
+
+msgid "Item Type"
+msgstr ""
+
+msgid "User"
+msgstr ""
+
+msgid "Location"
+msgstr ""
+
+msgid "Last Updated"
+msgstr ""
+
+msgid "Description"
+msgstr ""
+
+msgid "Promote"
+msgstr "Promoción"
+
+msgid "Development"
+msgstr "Desarrollo"
+
+msgid "Preproduction"
+msgstr "Preproducción"
+
+msgid "Production"
+msgstr "Producción"
+
+msgid "Demote"
+msgstr "Marcha atrás"
+
+msgid "Remove Job Item"
+msgstr "Eliminar Elemento de Pase"
+
+msgid "Missing job contents"
+msgstr "Falta rellenar el contenido del pase"
+
+msgid "Live search requires a minimum of 4 characters."
+msgstr "Para iniciar la búsqueda es necesario un mínimo de 4 caracteres."
+
+msgid "Submit"
+msgstr "Enviar"
+
+msgid "Reset"
+msgstr "Resetear"
+
+msgid "New Job"
+msgstr "Nuevo Pase"
+
 msgid "Job Monitor"
 msgstr "Monitor de Pases"
 
@@ -10,18 +64,59 @@ msgstr "Contenido del Pase"
 msgid "Job Options"
 msgstr "Opciones del Pase"
 
-msgid "Job Monitor"
-msgstr "Monitor de Pases"
+msgid "Baseline"
+msgstr "Entorno"
 
-msgid "Job Monitor"
-msgstr "Monitor de Pases"
+msgid "Comments"
+msgstr "Observaciones"
 
-msgid "Job Monitor"
-msgstr "Monitor de Pases"
+msgid "Date"
+msgstr "Fecha"
 
-msgid "Job Monitor"
-msgstr "Monitor de Pases"
+msgid "Time"
+msgstr "Hora"
 
-msgid "Job Monitor"
-msgstr "Monitor de Pases"
+msgid "Add Job Items"
+msgstr "Seleccione los Elementos del Pase"
+
+# Calendario
+msgid "Day"
+msgstr "Día"
+
+msgid "Urgent"
+msgstr "Urgente"
+
+msgid "Description"
+msgstr "Descripción"
+
+msgid "Calendar Name"
+msgstr "Nombre del Calendario"
+
+msgid "All"
+msgstr "Todos"
+
+msgid "Type"
+msgstr "Tipo"
+
+msgid "Starts at"
+msgstr "Hora inicio"
+
+msgid "Ends at"
+msgstr "Hora fin"
+
+msgid "Job Calendar"
+msgstr "Calendario de Pase"
+
+msgid "Job Calendars"
+msgstr "Calendarios de Pase"
+
+msgid "New Window"
+msgstr "Nueva Ventana"
+
+msgid "Modify Window"
+msgstr "Modificar Ventana"
+
+msgid "From %1 to %2"
+msgstr "De %1 a %2"
+
 

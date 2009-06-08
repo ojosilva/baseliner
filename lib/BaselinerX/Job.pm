@@ -40,7 +40,7 @@ register 'config.job' => {
 };
 
 register 'menu.job' => { label => 'Jobs' };
-register 'menu.job.create' => { label => 'Create a new Job', url=>'/t/newjob.mas', title=>'New Job' };
+register 'menu.job.create' => { label => 'Create a new Job', url=>'/t/newjob.mas', title=>_loc('New Job') };
 #register 'menu.job.list' => { label => 'List Current Jobs', url=>'/maqueta/list.mas', title=>'Job Monitor' };
 #register 'menu.job.exec' => { label => 'Exec Current Jobs', url_run=>'/maqueta/list.mas', title=>'Job Monitor' };
 register 'menu.job.hist' => { label => 'Historical Data', handler => 'function(){ Ext.Msg.alert("Hello"); }' };
@@ -202,6 +202,18 @@ sub monitor_json_from_config : Path('/job/monitor_json_from_config') {
 	#push @rows, { job=>$_, start_date=>'22/10/1974', status=>'Running' } for( $p->{dir} eq 'ASC' ? reverse @jobs : @jobs );
 	$c->stash->{json} = { cat => \@rows };	
 	$c->forward('View::JSON');
+}
+
+use JSON::XS;
+sub job_submit : Path('/job/submit') {
+    my ( $self, $c ) = @_;
+	my $p = $c->request->parameters;
+	my $contents = decode_json $p->{contents};
+	if( !$contents ) {
+		
+	}
+	#$c->res->body( '<pre' . Dump $p );
+	##$self->create_job( $c, $p );
 }
 
 sub job_new : Path('/job/new') {

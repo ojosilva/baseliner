@@ -29,8 +29,12 @@
 		Ext.Ajax.request({
 			url: comp_url,
 			success: function(xhr) {
-				var comp = eval(xhr.responseText);
-				Baseliner.addNewTabItem( comp, ptitle );
+				try {
+					var comp = eval(xhr.responseText);
+					Baseliner.addNewTabItem( comp, ptitle );
+				} catch(err) {
+					Ext.Msg.alert("Error Rendering Component", err);
+				}
 			},
 			failure: function(xhr) {
 				var win = new Ext.Window({ layout: 'fit', 
@@ -67,5 +71,28 @@
 		};
 	 
 		return that;
-	}();
+	};
+
+	Baseliner.showAjaxComp = function(purl,pparams){
+		Ext.Ajax.request({
+			url: purl,
+			params: pparams,
+			success: function(xhr) {
+				try {
+					comp = eval(xhr.responseText);
+					comp.show();
+				} catch(err) {
+					Ext.Msg.alert("Error Rendering Component", err);
+				}
+			},
+			failure: function(xhr) {
+				var win = new Ext.Window({ layout: 'fit', 
+					id: 'cal-win',
+					autoScroll: true, title: ptitle+' create failed', 
+					height: 600, width: 600, 
+					html: 'Server communication failure:' + xhr.responseText });
+				win.show();
+			}
+		});
+	};
 

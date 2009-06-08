@@ -1,3 +1,14 @@
+<%init>
+	$c->stash->{job_types} = [
+		{ id=> 'promote', label => _loc('Promote'), checked=>1 },
+		{ id=> 'demote', label => _loc('Demote') },
+	];
+	$c->stash->{bl} = [
+		['DES'  => _loc('Development')],
+		['PRE'  => _loc('Preproduction') ],
+		['PRO'  => _loc('Production') ],
+	];
+</%init>
 <%perl>
 
 </%perl>
@@ -9,10 +20,7 @@ Ext.onReady(function(){
 	//------ Tabbed Job Item list 	
 	var pp = new Ext.Panel({
 		id: 'main-view222',
-		title: 'Job Item List',
-		collapsible: true,
-		width: 800,
-		height: 500,
+		layout: 'fit',
 		items: [  
 			{ xtype:'tabpanel', region: 'center', id:'main-panel',
 				defaults: { closable: true, autoScroll: true }, 
@@ -21,101 +29,164 @@ Ext.onReady(function(){
 		]
 	});
 
-		Ext.Ajax.request({
-			url: '/t/newjob_json.mas',
-			success: function(xhr) {
-				var comp = eval(xhr.responseText);
-				var tabpanel = Ext.getCmp('main-panel');
-				var tab = tabpanel.add(comp);
-				tab.setTitle( title );
-				tabpanel.setActiveTab(comp);
-			},
-			failure: function(xhr) {
-				var win = new Ext.Window({ layout: 'fit', 
-					autoScroll: true, title: ptitle+' create failed', 
-					height: 600, width: 600, 
-					html: 'Server communication failure:' + xhr.responseText });
-				win.show();
-			}
-		});
+	Ext.Ajax.request({
+		url: '/t/newjob_json.mas',
+		success: function(xhr) {
+			var comp = eval(xhr.responseText);
+			var tabpanel = Ext.getCmp('main-panel');
+			var tab = tabpanel.add(comp);
+			tab.setTitle( title );
+			tabpanel.setActiveTab(comp);
+		},
+		failure: function(xhr) {
+			var win = new Ext.Window({ layout: 'fit', 
+				autoScroll: true, title: ptitle+' create failed', 
+				height: 600, width: 600, 
+				html: 'Server communication failure:' + xhr.responseText });
+			win.show();
+		}
+	});
+
+	var baselines = new Ext.data.SimpleStore({ 
+	   fields: ['id', 'baseline'], 
+	   data : <% js_dumper( $c->stash->{bl} ) %>
+	}); 
 
     //    bd.createChild({tag: 'h2', html: 'Select the job contents'});
 	//------- Search Combo
     var colModel = new Ext.grid.ColumnModel([
-        {id:'item',header: "Job Item", width: 160, sortable: true, locked:false, dataIndex: 'item'},
-        {header: "Item Type", width: 125, sortable: true, dataIndex: 'provider'},
-        {header: "User", width: 75, sortable: true, dataIndex: 'user'},
-        {header: "Location", width: 85, sortable: true, dataIndex: 'ns' },
-        {header: "Last Updated", width: 85, sortable: true, dataIndex: 'date' },
-        {header: "Description", width: 350, sortable: true, dataIndex: 'text'}
+        {id:'item',header: "<% _loc('Job Item') %>", width: 160, sortable: true, locked:false, dataIndex: 'item'},
+        {header: "<% _loc('Item Type') %>", width: 125, sortable: true, dataIndex: 'provider'},
+        {header: "<% _loc('User') %>", width: 75, sortable: true, dataIndex: 'user'},
+        {header: "<% _loc('Location') %>", width: 85, sortable: true, dataIndex: 'ns' },
+        {header: "<% _loc('Last Updated') %>", width: 85, sortable: true, dataIndex: 'date' },
+        {header: "<% _loc('Description') %>", width: 350, sortable: true, dataIndex: 'text'}
     ]);
     var ds_grid = new Ext.data.Store({});
 	var jc_grid = new Ext.grid.GridPanel({
 			width: 800,
 			height: 300,
+			style: 'margin-top: 20px',
 			name: 'jc',
 			title: '<% _loc('Job Contents') %>',
 			border: true,
 			ds: ds_grid,
 			cm: colModel
 	});
+	var tb = new Ext.Toolbar({
+			id: 'formtb',
+			style: 'margin: 3px',
+			items: [ 
+				{
+					text: 'List Job Items',
+					icon:'/static/ext/resources/images/default/dd/drop-add.gif',
+					cls: 'x-btn-text-icon',
+					handler: function() {
+						var w = new Ext.Window({
+							layout: 'fit',
+							height: 600, width: 700,
+							closeAction: 'hide',
+							autoDestroy: false,
+							title: 'Choose Job Items',
+							items: pp
+						});
+						w.show();
+					}
+				},
+				{
+					xtype: 'button',
+					text: '<% _loc('Remove Job Item') %>',
+					icon:'/static/ext/resources/images/default/dd/del.gif',
+					cls: 'x-btn-text-icon',
+					handler: function() {
+						var sm = jc_grid.getSelectionModel();
+						var sel = sm.getSelected();
+						jc_grid.getStore().remove(sel);
+					}
+				},
+			'->',
+			{ xtype:'button', text: '<% _loc('Submit') %>', handler: function(){
+					// turn grid into JSON to post data
+					var cnt = jc_grid.getStore().getCount();
+					if( cnt == 0 ) {
+						Ext.Msg.show({icon: 'ext-mb-error', buttons: { cancel: true }, title: "Form error", msg: "<% _loc('Missing job contents') %>"});
+						return 1;
+					}
+					var json = [];
+					for( i=0; i<cnt; i++) {
+						var rec = jc_grid.getStore().getAt(i);
+						json.push( Ext.util.JSON.encode( rec.data )) ;
+					}
+					var json_res = '[' + json.join(',') + ']';
+					movie_form.getForm().submit({
+						params: { job_contents: json_res },
+						success: function(f,a){
+							Ext.Msg.alert('<% _loc('Success') %>', 'It worked');
+						},
+						failure: function(f,a){
+							//Ext.Msg.alert('<% _loc('Warning') %>', '<% _loc('Error') %>');
+						}
+					});
+				}
+			},
+			{ xtype:'button',text:'<% _loc('Reset') %>', handler: function() { 
+					movie_form.getForm().reset()
+				}  
+			}] 
+	});
 	var movie_form = new Ext.FormPanel({ 
-			 url: 'movie-form-submit.php', 
+			 url: '/job/submit', 
 			 renderTo: 'jobForm',
 			 frame: true, 
-			 title: 'Job Options', 
+			 title: '<% _loc('Job Options') %>', 
 			 width: 900, 
-buttons: [{
-	text: 'Create',
-	handler: function(){
-		var cnt = jc_grid.getStore().getCount();
-		for( i=0; i<cnt; i++) {
-			var r = jc_grid.getStore().getAt(i);
-		}
-		movie_form.getForm().submit({
-			success: function(f,a){
-				Ext.Msg.alert('Success', 'It worked');
-			},
-			failure: function(f,a){
-				Ext.Msg.alert('Warning', 'Error');
-			}
-		});
-	}
-	}, {
-		text: 'Reset',
-		handler: function(){
-		movie_form.getForm().reset();
-	}
-}],
-			 
 			 items: [
-			  { 
-				xtype: 'textfield', 
-				fieldLabel: 'Baseline', 
-				width: 50,
-				name: 'bl' 
-			  },
-			  { 
-				xtype: 'textarea', 
-				fieldLabel: 'Comments', 
-				width: 500,
-				name: 'comments' 
-			  },
-			  { 
-				xtype: 'datefield', 
-				fieldLabel: 'Date', 
-				name: 'job_date' 
-			  },
-			  { 
-				xtype: 'textfield', 
-				fieldLabel: 'Time', 
-				name: 'job_time' 
-			  },
-			  { xtype: 'hidden',
-			  	name: 'contents'
-			  },
-			  jc_grid,
-			   pp
+				 tb,
+% my $flag;
+% foreach my $jt (  @{ $c->stash->{job_types} || [] } ) {
+				  { 
+					xtype: 'radio', 
+					<% $flag++ ? 'hideLabel: false, labelSeparator: "",' : 'fieldLabel: "' . _loc('Job Type') .'",' %>
+					width: 100,
+					inputValue: '<% $jt->{id} %>',
+					name: 'job_type',
+					<% $jt->{checked} ? 'checked: true,' : '' %>
+					boxLabel: '<% $jt->{label} %>'
+				  },
+% }
+				{
+					   xtype: 'combo', 
+					   name: 'bl', 
+					   fieldLabel: '<% _loc('Baseline') %>', 
+					   mode: 'local', 
+					   editable: false,
+					   forceSelection: true,
+					   triggerAction: 'all',
+					   store: baselines, 
+					   displayField:'baseline', 
+					   allowBlank: false,
+					   width: 120 
+				}, 
+				  { 
+					xtype: 'textarea', 
+					fieldLabel: '<% _loc('Comments') %>', 
+					width: 500,
+					name: 'comments' 
+				  },
+				  { 
+					xtype: 'datefield', 
+					fieldLabel: '<% _loc('Date') %>', 
+				    allowBlank: false,
+					format: 'd/m/Y',
+					name: 'job_date' 
+				  },
+				  { 
+					xtype: 'textfield', 
+					fieldLabel: '<% _loc('Time') %>', 
+				    allowBlank: false,
+					name: 'job_time' 
+				  },
+				  jc_grid
 			  ] 
 		  }); 
 
@@ -154,7 +225,7 @@ buttons: [{
         store: ds_combo,
         displayField:'item',
         typeAhead: false,
-        loadingText: 'Searching...',
+        loadingText: '<% _loc('Searching...') %>',
         width: 570,
         pageSize:10,
         hideTrigger:true,
@@ -162,7 +233,6 @@ buttons: [{
         applyTo: 'search',
         itemSelector: 'div.search-item',
         onSelect: function(record){ // override default onSelect to do redirect
-			alert( record.data.item );
 			ds_grid.add(record);
         }
     });
@@ -180,9 +250,9 @@ buttons: [{
 <div class='tab-style' style="width:600px;">
     <div class="x-box-tl"><div class="x-box-tr"><div class="x-box-tc"></div></div></div>
     <div class="x-box-ml"><div class="x-box-mr"><div class="x-box-mc">
-        <h3 style="margin-bottom:5px;">Add Job Items</h3>
+        <h3 style="margin-bottom:5px;"><% _loc('Add Job Items') %></h3>
         <input type="text" size="40" name="search" id="search" />
-        <div style="padding-top:4px;"> Live search requires a minimum of 4 characters.  </div>
+        <div style="padding-top:4px;"><% _loc('Live search requires a minimum of 4 characters.') %></div>
     </div></div></div>
     <div class="x-box-bl"><div class="x-box-br"><div class="x-box-bc"></div></div></div>
 </div>

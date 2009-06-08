@@ -1,4 +1,4 @@
-package Baseliner::Schema::Baseliner::Result::BaliLog;
+package Baseliner::Schema::Baseliner::Result::BaliCalendarWindow;
 
 use strict;
 use warnings;
@@ -6,68 +6,58 @@ use warnings;
 use base 'DBIx::Class';
 
 __PACKAGE__->load_components("InflateColumn::DateTime", "Core");
-__PACKAGE__->table("bali_log");
+__PACKAGE__->table("bali_calendar_window");
 __PACKAGE__->add_columns(
   "id",
-  {
-    data_type => "NUMBER",
-    default_value => undef,
-    is_nullable => 0,
-    size => 126,
-  },
-  "text",
+  { data_type => "NUMBER", default_value => 1, is_nullable => 0, size => 126 },
+  "start_time",
   {
     data_type => "VARCHAR2",
     default_value => undef,
     is_nullable => 1,
-    size => 1000,
+    size => 20,
   },
-  "lev",
+  "end_time",
   {
     data_type => "VARCHAR2",
     default_value => undef,
     is_nullable => 1,
-    size => 10,
+    size => 20,
   },
-  "job_id",
-  {
-    data_type => "NUMBER",
-    default_value => undef,
-    is_nullable => 0,
-    size => 126,
-  },
-  "more",
+  "day",
   {
     data_type => "VARCHAR2",
     default_value => undef,
     is_nullable => 1,
-    size => 10,
+    size => 20,
   },
-  "data",
+  "type",
   {
-    data_type => "BLOB",
+    data_type => "VARCHAR2",
     default_value => undef,
     is_nullable => 1,
-    size => 2147483647,
+    size => 1,
   },
-  "wiki_id",
+  "active",
   {
-    data_type => "NUMBER",
-    default_value => undef,
+    data_type => "VARCHAR2",
+    default_value => "'1'\n",
     is_nullable => 1,
-    size => 126,
+    size => 1,
   },
+  "id_cal",
+  { data_type => "NUMBER", default_value => "1 ", is_nullable => 0, size => 126 },
 );
 __PACKAGE__->set_primary_key("id");
 __PACKAGE__->belongs_to(
-  "job_id",
-  "Baseliner::Schema::Baseliner::Result::BaliJob",
-  { id => "job_id" },
+  "id_cal",
+  "Baseliner::Schema::Baseliner::Result::BaliCalendar",
+  { id => "id_cal" },
 );
 
 
 # Created by DBIx::Class::Schema::Loader v0.04005 @ 2009-06-08 21:15:46
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:gr4pnIo2M6Vz90+5GRdT3Q
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:1qaNSaqkpaWRuQyRqh62kQ
 
 
 # You can replace this text with custom content, and it will be preserved on regeneration

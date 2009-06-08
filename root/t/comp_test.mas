@@ -1,0 +1,9 @@
+(function(){
+	var w = new Ext.Window({
+		layout: 'fit',
+		height: 400, width: 400,
+		title: 'Edit Window',
+		items: new Ext.Panel({ id: 'asdf', layout: 'fit', title: 'dfdff' })
+	});
+	return w;
+})();

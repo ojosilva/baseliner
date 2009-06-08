@@ -11,6 +11,7 @@ use FindBin '$Bin';
 use Locale::Maketext::Simple (
 			Style => 'gettext',
 			Path => $Bin.'/../lib/Baseliner/I18N',
+			Decode => 0,
 		);
 use Carp;
 use DateTime;
@@ -41,8 +42,9 @@ sub _unique {
 	keys %{{ map {$_=>1} @_ }};
 }
 
+use Encode qw( decode_utf8 encode_utf8 is_utf8 );
 sub _loc {
-	loc( @_ );
+	decode_utf8 loc( @_ ); # decoding is necessary due to inconsistent js_dumper utf8 conversion
 }
 
 sub _log {

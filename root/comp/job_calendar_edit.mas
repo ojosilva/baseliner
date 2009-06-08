@@ -1,0 +1,203 @@
+<%init>
+my $id = $c->stash->{id};
+my $id_cal = $c->stash->{id_cal};
+my $panel = $c->stash->{panel};
+my $dia = $c->stash->{dia};
+my $activa = $c->stash->{activa};
+my $inicio = $c->stash->{inicio};
+my $fin = $c->stash->{fin};
+my $tipo = $c->stash->{tipo};
+
+my $loc = DateTime::Locale->load("es_ES"); 
+my $day_wide = $loc->day_format_wide;
+my $from_to_1 = _loc("From %1 to %2", $day_wide->[0], $day_wide->[4]);
+my $from_to_2 = _loc("From %1 to %2", $day_wide->[0], $day_wide->[6]);
+
+sub capitalize { return uc(substr($_[0],0,1)).substr($_[0],1) }
+
+my @ven_dia;
+my @ven_ini;
+my @ven_fin;
+
+# ven_dia
+foreach my $dd ( 0..6 ) {
+	my $day_name = capitalize( $day_wide->[ Encode::encode_utf8( $dd ) ] );
+	push @ven_dia, [ $dd , $day_name  ];
+					#<OPTION VALUE="<% $dd %>" <% ($dia eq $dd ?'SELECTED':'') %>><% capitalize( $day_wide->[ Encode::encode_utf8( $dd ) ] ) %></OPTION>
+}
+
+unless($id) {  #si es nuevo, se permiten rangos 
+	#				<OPTION VALUE="L-V" ><% $from_to_1 %></OPTION>
+	#				<OPTION VALUE="L-D" ><% $from_to_2 %></OPTION>
+}
+
+# ven_ini
+for(my $hh=0; $hh<=23; $hh++) {
+	for(my $mm=0; $mm<59; $mm+=30) {
+		my $hora = sprintf("%02d:%02d", $hh, $mm);
+		my $hora_corta = sprintf("%d:%02d", $hh, $mm);
+		push @ven_ini, [ $hora, $hora_corta  ];
+	}
+}
+
+# ven_fin
+for(my $hh=0; $hh<=24; $hh++) {
+	for(my $mm=0; $mm<59; $mm+=30) {
+		last if( $hh==24 && $mm==30 );
+		my $hora = sprintf("%02d:%02d", $hh, $mm);
+		my $hora_corta = sprintf("%d:%02d", $hh, $mm);
+		push @ven_fin, [ $hora, $hora_corta  ];
+	}
+}
+
+</%init>
+(function(){
+
+	Ext.ns('Baseliner');
+	Baseliner.goModificar = function(cmd) {
+		var form = fpanel.getForm();
+		//alert( cmd + "=" + form.findField('ven_ini').getValue() );
+		var ini = form.findField('ven_ini').getValue().substring(0,2) + form.findField('ven_ini').getValue().substring(3,5);
+		var fin = form.findField('ven_fin').getValue().substring(0,2) + form.findField('ven_fin').getValue().substring(3,5);
+		if( ini >= fin ) {
+			alert("Error: hora fin es igual o superior a la hora de inicio (" +ini+ " < " +fin+ ")" ); // ">
+			return false;
+		}
+		if( cmd=="B" && form.findField('ven_tipo').getValue()=="X" ) {
+			alert("Aviso: las ventanas cerradas no necesitan borrarse.")
+			return false;
+		}
+		form.findField('cmd').setValue(cmd);
+		form.submit({
+			clientValidation: true,
+			success: function(form, action) {
+				//Ext.Msg.alert("Success", action.result.msg);
+				var pan = Ext.get('<% $panel %>');
+				var upd = pan.getUpdater();
+				upd.update( { 
+					url: '/job/calendar_show', params: { id_cal: '<% $id_cal %>', panel: '<% $panel %>' }, scripts: true ,
+					callback: function(el,success,res,opt){
+						pan.setTitle('Calendar Windows');
+					}
+				});
+				win.close();
+			},
+			failure: function(form, action) {
+				var upd = Ext.get('<% $panel %>').getUpdater() ;
+				upd.update( { url: '/job/calendar_show',  params: { id_cal: '<% $id_cal %>', panel: '<% $panel %>' }, scripts: true });
+				Ext.get('<% $panel %>').doLayout();
+				Ext.Msg.alert("Failure", action.result.msg);
+			}
+		});
+	}
+	var ven_dia_store = new Ext.data.SimpleStore({ 
+	   fields: ['value', 'name'], 
+	   data : <% js_dumper( [ @ven_dia ] ) %>
+	}); 
+	var ven_tipo_store = new Ext.data.SimpleStore({ 
+	   fields: ['value', 'name'], 
+	   data : <% js_dumper( [ ['N', _loc('Normal') ],[ 'U', _loc('Urgent') ] ] ) %>
+	}); 
+	var ven_ini_store = new Ext.data.SimpleStore({ 
+	   fields: ['value', 'name'], 
+	   data : <% js_dumper( [ @ven_ini ] ) %>
+	}); 
+	var ven_fin_store = new Ext.data.SimpleStore({ 
+	   fields: ['value', 'name'], 
+	   data : <% js_dumper( [ @ven_fin ] ) %>
+	}); 
+	
+% if ( $c->stash->{not_found} ) {
+     //   Ext.get("calform").createChild({tag: 'h2', html: 'Ventana con ID=<% $id %> no existe.'});
+% } else {
+	var fpanel = new Ext.FormPanel({
+		frame: true,
+		url: '/job/calendar_submit', 
+		buttons: [
+			{  text: 'Aceptar', handler: function(){ Baseliner.goModificar('A') } }
+% unless( $c->stash->{create} ) { #las ventanas cerradas no se borran 
+			,{  text: 'Borrar', handler: function(){ Baseliner.goModificar('B') } }
+%   if( $activa ) {
+			,{  text: 'Desactivar', handler: function(){  Baseliner.goModificar('C0')   } }
+%   } else {
+			,{  text: 'Activar', handler: function(){  Baseliner.goModificar('C1')   } }
+% 	}
+% }
+			,{  text: 'Cancelar', handler: function(){ win.close(); } }
+		],
+		items: [
+			{  xtype: 'hidden', name: 'id', value: '<% $id %>' },
+			{  xtype: 'hidden', name: 'id_cal', value: '<% $id_cal %>' },
+			{  xtype: 'hidden', name: 'cmd' },
+			{  xtype: 'combo', 
+					   name: 'ven_dia', 
+					   hiddenName: 'ven_dia',
+					   fieldLabel: 'Dia', 
+					   mode: 'local', 
+					   editable: false,
+					   forceSelection: true,
+					   triggerAction: 'all',
+					   store: ven_dia_store, 
+					   valueField: 'value',
+					   displayField:'name', 
+					   value: '<% $dia %>',
+					   allowBlank: false,
+					   width: 150 
+			},
+			{  xtype: 'combo', 
+					   name: 'ven_tipo', 
+					   hiddenName: 'ven_tipo',
+					   fieldLabel: '<% _loc('Type') %>', 
+					   mode: 'local', 
+					   editable: false,
+					   forceSelection: true,
+					   triggerAction: 'all',
+					   store: ven_tipo_store, 
+					   valueField: 'value',
+					   displayField:'name', 
+					   value: '<% $tipo %>',
+					   allowBlank: false,
+					   width: 150 
+			},
+			{  xtype: 'combo', 
+					   name: 'ven_ini', 
+					   hiddenName: 'ven_ini',
+					   fieldLabel: '<% _loc('Starts at') %>', 
+					   mode: 'local', 
+					   editable: false,
+					   forceSelection: true,
+					   triggerAction: 'all',
+					   store: ven_ini_store, 
+					   valueField: 'value',
+					   displayField:'name', 
+					   value: '<% $inicio %>',
+					   allowBlank: false,
+					   width: 150 
+			},
+			{  xtype: 'combo', 
+					   name: 'ven_fin', 
+					   hiddenName: 'ven_fin',
+					   fieldLabel: '<% _loc('Ends at') %>', 
+					   mode: 'local', 
+					   editable: false,
+					   forceSelection: true,
+					   triggerAction: 'all',
+					   store: ven_fin_store, 
+					   valueField: 'value',
+					   displayField:'name', 
+					   value: '<% $fin %>',
+					   allowBlank: false,
+					   width: 150 
+		   }
+		]
+	});
+	var win = new Ext.Window({
+		layout: 'fit',
+		height: 200, width: 500,
+		title: 'Edit Window',
+		items: fpanel
+	});
+	return win;
+% }
+})();
+

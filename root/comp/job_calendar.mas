@@ -1,0 +1,104 @@
+<%init>
+	
+my $grid = $c->stash->{grid};
+my $panel = $c->stash->{panel};
+my $id_cal = $c->stash->{id_cal};
+my $loc = DateTime::Locale->load("es_ES"); 
+my $day_wide = $loc->day_format_wide;
+
+</%init>
+<script language="text/javascript">
+
+Ext.onReady(function(){
+		
+	Ext.ns('Baseliner');
+	Baseliner.editSlot =  function(dia,ini,fin) {
+		var comp = Baseliner.showAjaxComp( '/job/calendar_edit', {  panel: '<% $panel %>', id_cal: '<% $id_cal %>', pdia: 'day-'+dia, pini: ini, pfin: fin } );
+	}
+
+	Baseliner.editId = function(id) {
+		var comp = Baseliner.showAjaxComp( '/job/calendar_edit', { id: id, id_cal: '<% $id_cal %>', panel: '<% $panel %>'} );
+	}
+
+});
+</script>
+
+<DIV class='job-calendar'>
+<TABLE cellpadding=0 cellspacing=0 border=0 width="100%">
+<TR><TD>&nbsp;</TD><TD></TD></TR>
+<TR>
+<TD>
+</TD>
+</TR>
+</TABLE>
+<FORM name="infForm" action="" method="GET">
+	<TABLE>
+		<TR><TD>&nbsp;</TD>
+% foreach my $dd ( @{ $day_wide || [] } ) {
+			<TH width='100'><% Encode::encode_utf8( $dd ) %></TH>
+% }
+		</TR>
+<%perl>
+	##my $grid = $c->stash->{grid};
+	for my $row ( 0..47 ) {
+		print "<TR style='height:3px;'><td rowspan=1></td>";
+		foreach my $dd ( 0..6 ) {
+			my $d = $grid->{$dd}->{$row};	
+			next unless ref $d;
+			print qq{<TD style='cursor:hand' };
+			print qq{	rowspan=$d->{rowspan} };
+			print qq{   onmouseover='javascript:this.className="$d->{class}Hover";' 
+						onmouseout='javascript:this.className="$d->{class}";' 
+						align=center CLASS='$d->{class}' 
+			};
+			if( $d->{type} eq 'X' ) {
+				print qq{ onclick='javascript: Baseliner.editSlot("$d->{day}","$d->{lasthour}","$d->{hour}")'>};
+			} else {
+				print qq{ onclick='javascript: Baseliner.editId("$d->{id}")'>};
+			}	
+			print "$d->{lasthour} - $d->{hour}</TD>";						
+		}
+		print "</TR>";
+	}
+</%perl>
+	</TABLE>
+
+</FORM>
+<TABLE border="0" width="100%" cellpadding="2">
+<TR>
+<TR>
+<TD align="left">
+	<TABLE><TR>
+		<TD><B>Leyenda: </B>
+		<TD width=20>
+		<TD class="normal" width=15>
+		<TD>Ventana Normal
+		<TD width=15>
+		<TD class="urgente" width=15>
+		<TD>Ventana Urgente
+		<TD width=15>
+		<TD class="nopase" width=15>
+		<TD>No hay pases
+	</TR></TABLE>
+</TD>
+</TR>
+<TR>
+<TD align="left">
+	<TABLE><TR>
+		<TD><B>Leyenda: </B>
+		<TD width=20>
+		<TD class="normalDes" width=15>
+		<TD>Normal Inactiva
+		<TD width=15>
+		<TD class="urgenteDes" width=15>
+		<TD>Urgente Inactiva
+	</TR></TABLE>
+</TD>
+</TR>
+<TD align="right">
+</TD>
+</TR>
+</TABLE>
+
+</DIV>
+

@@ -1,15 +1,20 @@
 (function(){
-	// La fuente de Datos JSON con todos el listado:
 	var store=new Ext.data.JsonStore({
 		root: 'cat' , 
 		remoteSort: true,
 		totalProperty:"totalCount", 
 		id: 'rownum', 
-		url: '<% $c->stash->{url_store} %>?fid=<% 1 %>&par1=<% 2 %>&cam=<% 3 %>&filtro=ALL',
-		fields: <% $c->stash->{fields} %>
+		url: '/job/calendar_list_json',
+		fields: [ 
+			{  name: 'id' },
+			{  name: 'name' },
+			{  name: 'description' },
+			{  name: 'bl' },
+			{  name: 'ns' },
+			{  name: 'ns_desc' }
+		]
 	});
 
-	// Esta es la definición del objeto buscador
 	Ext.app.SearchField = Ext.extend(Ext.form.TwinTriggerField, {
 		initComponent : function(){
 			Ext.app.SearchField.superclass.initComponent.call(this);
@@ -83,7 +88,7 @@
 		// create the grid
 		var grid = new Ext.grid.GridPanel({
 			renderTo: 'main-panel',
-			title: '<% $c->stash->{title} %>',
+			title: '<% _loc('Job Calendars') %>',
 			header: false,
             stripeRows: true,
 			autoScroll: true,
@@ -94,7 +99,13 @@
 			}],
 			selModel: new Ext.grid.RowSelectionModel({singleSelect:true}),
 			loadMask:'true',
-			columns: <% $c->stash->{columns}  %>,
+			columns: [
+				{ header: '<% _loc('Calendar') %>', width: 200, dataIndex: 'name', sortable: true },	
+				{ header: '<% _loc('Description') %>', width: 200, dataIndex: 'description', sortable: true },	
+				{ header: '<% _loc('Baseline') %>', width: 100, dataIndex: 'bl', sortable: true },	
+				{ header: '<% _loc('Namespace') %>', width: 150, dataIndex: 'ns', sortable: true },	
+				{ header: '<% _loc('Namespace Description') %>', width: 200, dataIndex: 'ns_desc', sortable: true }	
+			],
 			autoSizeColumns: true,
 			deferredRender:true,
 			bbar: new Ext.PagingToolbar({
@@ -115,7 +126,71 @@
 					icon:'/static/ext/resources/images/default/dd/drop-add.gif',
 					cls: 'x-btn-text-icon',
 					handler: function() {
-						Baseliner.addNewTab('<% $c->stash->{url_add} %>', '<% $c->stash->{title_add} %>');
+						//Window
+						var ns_store = new Ext.data.SimpleStore({ 
+						   fields: ['value', 'name'], 
+						   data : <% js_dumper( [ ['/', 'General' ] ] ) %>
+						}); 
+						var bl_store = new Ext.data.SimpleStore({ 
+						   fields: ['value', 'name'], 
+						   data : <% js_dumper( [ ['*', _loc('All') ] ] ) %>
+						}); 
+						var new_cal = new Ext.FormPanel({
+							url: '/job/calendar_update',
+							frame: true,
+							labelWidth: 150, 
+							defaults: { width: 250 },
+							buttons: [
+								{  text: '<% _loc('OK') %>',
+									handler: function(){ 
+										var ff = new_cal.getForm();
+										ff.submit({
+											success: function(form, action) { win.close(); },
+											failure: function(form, action) { Ext.Msg.alert("Failure", action.result.msg); }
+										});
+									}
+								},
+								{  text: '<% _loc('Cancel') %>' , handler: function(){  win.close() } }
+							],
+							items: [
+								{  xtype: 'hidden', name: 'action', value: 'create' },
+								{  xtype: 'textfield', name: 'name', fieldLabel: '<% _loc('Calendar Name') %>' }, 
+								{  xtype: 'textarea', name: 'description', fieldLabel: '<% _loc('Description') %>' }, 
+								{  xtype: 'combo', 
+										   name: 'ns', 
+										   hiddenName: 'ns',
+										   fieldLabel: '<% _loc('Namespace') %>', 
+										   mode: 'local', 
+										   editable: false,
+										   forceSelection: true,
+										   triggerAction: 'all',
+										   store: ns_store, 
+										   valueField: 'value',
+										   displayField:'name', 
+										   allowBlank: false,
+								},
+								{  xtype: 'combo', 
+										   name: 'bl', 
+										   hiddenName: 'bl',
+										   fieldLabel: '<% _loc('Baseline') %>',
+										   mode: 'local', 
+										   editable: false,
+										   forceSelection: true,
+										   triggerAction: 'all',
+										   store: bl_store, 
+										   valueField: 'value',
+										   displayField:'name', 
+										   allowBlank: false
+								}
+							]
+						});
+						var win = new Ext.Window({
+							layout: 'fit',
+							height: 250, width: 450,
+							title: 'Edit Window',
+							items: new_cal
+						});
+						win.show();
 					}
 				}),
 				new Ext.Toolbar.Button({
@@ -123,7 +198,15 @@
 					icon:'/static/ext/resources/images/default/dd/drop-yes.gif',
 					cls: 'x-btn-text-icon',
 					handler: function() {
-						document.location.href = '<% "sistemas.mas?fid=&cam=&par1=&envname=&state="  %>';
+						var sm = grid.getSelectionModel();
+						if (sm.hasSelection())
+						{
+							var sel = sm.getSelected();
+							Baseliner.addNewTabComp('/job/calendar?id_cal=' + sel.data.id , '<% _loc('Calendar') %>');
+						} else {
+							Ext.Msg.alert('Error', 'Falta seleccionar una fila');	
+						};
+						
 					}
 				}),
 				new Ext.Toolbar.Button({
@@ -133,23 +216,15 @@
 					handler: function() {
 						var sm = grid.getSelectionModel();
 						var sel = sm.getSelected();
-						Ext.Msg.confirm('Confirmation', 'Are you sure you want to delete the element<br>' + sel.data.elemento + '?', 
+						Ext.Msg.confirm('Confirmation', 'Are you sure you want to delete the calendar ' + sel.data.name + '?', 
 							function(btn){ 
 								if(btn=='yes') {
 									var conn = new Ext.data.Connection();
-					
 									conn.request({
-										url: '<% $c->stash->{url_del} %>',
-										params: {
-											action: 'delete',
-											id: sel.data.id
-										},
-										success: function(resp,opt) {
-											grid.getStore().remove(sel);
-										},
-										failure: function(resp,opt) {
-											Ext.Msg.alert('Error', 'Could not delete the item');
-										}
+										url: '/job/calendar_update',
+										params: { action: 'delete', id_cal: sel.data.id },
+										success: function(resp,opt) { grid.getStore().remove(sel); },
+										failure: function(resp,opt) { Ext.Msg.alert('Error', 'Could not delete the calendar.'); }
 									});	
 								}
 							} );
@@ -161,34 +236,11 @@
 
 		grid.on("rowdblclick", function(grid, rowIndex, e ) {
 			var r = grid.getStore().getAt(rowIndex);
-            var url = '<% $c->stash->{url_detail} %>';
-            var ttitle = '<% $c->stash->{detail_title} %>';
-            var tfield = '<% $c->stash->{detail_field} %>';
-            if( ttitle!='' ) ttitle+=" ";
-            if( tfield!='' ) { 
-                ttitle += r.get( tfield );
-                url += "?" + tfield + "=" + r.get(tfield);
-            }
-            Baseliner.addNewTab( url, ttitle );
-            /* var win_data = {
-				layout: 'fit',
-				width: 400,
-				height: 200,
-				plain: true,
-				title: 'Details'
-			};
-            if( url != '' ) {
-                win_data.autoLoad = url;
-                win_data.scripts = true;
-            } else {
-                win_data.html = '--DUMMY--';
-            }
-			var win = new Ext.Window( win_data );
-			win.show();
-            */
+			Baseliner.addNewTabComp('/job/calendar?id_cal=' + r.get('id') , '<% _loc('Calendar') %>');
 		});		
 
 		Ext.getCmp('main-panel').setActiveTab( Ext.getCmp('main-panel').add(grid) ) ;
 		
 	return grid;
 })();
+

@@ -18,14 +18,14 @@ __PACKAGE__->add_columns(
   "ns",
   {
     data_type => "VARCHAR2",
-    default_value => "'/'",
+    default_value => "'/'                   ",
     is_nullable => 0,
     size => 1000,
   },
   "bl",
   {
     data_type => "VARCHAR2",
-    default_value => "'*'",
+    default_value => "'*'                   ",
     is_nullable => 0,
     size => 100,
   },
@@ -46,7 +46,7 @@ __PACKAGE__->add_columns(
   "ts",
   {
     data_type => "DATE",
-    default_value => "SYSDATE",
+    default_value => "SYSDATE               ",
     is_nullable => 0,
     size => 19,
   },
@@ -72,7 +72,12 @@ __PACKAGE__->add_columns(
     size => 2147483647,
   },
   "parent_id",
-  { data_type => "NUMBER", default_value => 0, is_nullable => 0, size => 126 },
+  {
+    data_type => "NUMBER",
+    default_value => "0                     ",
+    is_nullable => 0,
+    size => 126,
+  },
 );
 __PACKAGE__->set_primary_key("id");
 __PACKAGE__->has_many(
@@ -87,8 +92,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.04005 @ 2009-05-28 21:39:26
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:trBnmZwa6d4xtwyIQTS2nA
+# Created by DBIx::Class::Schema::Loader v0.04005 @ 2009-06-08 21:15:46
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:lPN89RRsAVex39jn1v+o5g
 
 
 # You can replace this text with custom content, and it will be preserved on regeneration

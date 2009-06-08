@@ -3,8 +3,8 @@
 	use Baseliner::Utils;
 	##_say "*******LOCA: " . $Bin.'../lib/Baseliner/I18N';
 	print _loc('hello');
-	print _loc('Job Monitor');
-	print $c->localize('Job Monitor');
+	print js_dumper( [ _loc('Demote') ] );
+	print $c->localize('Demote');
 </%perl>
 
 
