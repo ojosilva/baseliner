@@ -1,6 +1,24 @@
 msgid "hello"
 msgstr "jelo"
 
+msgid "Searching..."
+msgstr "Buscando"
+
+msgid "Failure"
+msgstr "Error"
+
+msgid "Update"
+msgstr "Actualizar"
+
+msgid "Namespace"
+msgstr "Ámbito"
+
+msgid "Root Namespace"
+msgstr "Ámbito Global"
+
+msgid "Namespace Description"
+msgstr "Descripción del Ámbito"
+
 msgid "Job Type"
 msgstr "Tipo de Pase"
 
@@ -11,16 +29,13 @@ msgid "Item Type"
 msgstr ""
 
 msgid "User"
-msgstr ""
+msgstr "Usuario"
 
 msgid "Location"
-msgstr ""
+msgstr "Ubicación"
 
 msgid "Last Updated"
-msgstr ""
-
-msgid "Description"
-msgstr ""
+msgstr "Última Actualización"
 
 msgid "Promote"
 msgstr "Promoción"
@@ -49,8 +64,20 @@ msgstr "Para iniciar la búsqueda es necesario un mínimo de 4 caracteres."
 msgid "Submit"
 msgstr "Enviar"
 
+msgid "New"
+msgstr "Nueva"
+
+msgid "Add"
+msgstr "Nueva"
+
 msgid "Reset"
 msgstr "Resetear"
+
+msgid "Create a new Job"
+msgstr "Crear Nuevo Pase"
+
+msgid "Jobs"
+msgstr "Pases"
 
 msgid "New Job"
 msgstr "Nuevo Pase"
@@ -79,7 +106,34 @@ msgstr "Hora"
 msgid "Add Job Items"
 msgstr "Seleccione los Elementos del Pase"
 
+msgid "Edit"
+msgstr "Editar"
+
+msgid "Delete"
+msgstr "Borrar"
+
+msgid "Warning"
+msgstr "Aviso"
+
+msgid "Confirmation"
+msgstr "Confirmación"
+
+msgid "No records found"
+msgstr "No hay registros"
+
 # Calendario
+msgid "Could not delete the calendar."
+msgstr "No he podido borrar el calendario."
+
+msgid "Calendar Windows"
+msgstr "Ventanas del Calendario"
+
+msgid "Calendar Info"
+msgstr "Datos del Calendario"
+
+msgid "Create Calendar"
+msgstr "Crear Calendario"
+
 msgid "Day"
 msgstr "Día"
 
@@ -119,4 +173,33 @@ msgstr "Modificar Ventana"
 msgid "From %1 to %2"
 msgstr "De %1 a %2"
 
+msgid "A calendar (%1) already exists for namespace %2 and baseline %3"
+msgstr "Un calendario (%1) ya existe para el ámbito %2 y entorno %3"
 
+# Harvest
+msgid "Harvest Subapplication"
+msgstr "Subaplición de Harvest"
+
+msgid "Harvest Project"
+msgstr "Proyecto de Harvest"
+
+msgid "Harvest Nature"
+msgstr "Naturaleza de Harvest"
+
+msgid "State"
+msgstr "Estado"
+
+msgid "Create a new Release"
+msgstr "Crear Release"
+
+msgid "New Release"
+msgstr "Nueva Release"
+
+msgid "Add Release Items"
+msgstr "Añadir Elementos a la Release"
+
+msgid "List Releases"
+msgstr "Listar Releases"
+
+msgid "Release Name '%1' already exists."
+msgstr "Nombre de Release '%1' ya existe."

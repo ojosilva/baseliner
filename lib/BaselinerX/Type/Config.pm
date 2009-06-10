@@ -51,7 +51,6 @@ sub factory {
 	$p{bl} ||= '*';
 	my $data = $p{data} || {};
 	for( @{$self->metadata} ) {
-warn "KEY = " . $_->{id};		
 		next if defined $data->{ $_->{id} }; 
 		## load missing from table
 		my $rs = $c->model('Baseliner::BaliConfig')->search({ ns=>$p{ns}, bl=>$p{bl}, key=>$self->key.'.'.$_->{id} }) or die $!;
@@ -60,6 +59,30 @@ warn "KEY = " . $_->{id};
 		}
 	}
 	$data = $self->getopt( $data ) if $p{getopt};
+	return $data;
+}
+
+=head2 data( [ns=>$ns, bl=>$bl, data=>{} ] );
+
+Simple data object creation for config objects.
+
+=cut
+sub data {
+	my ($self, %p ) = @_;
+	$p{ns} ||= '/';
+	$p{bl} ||= '*';
+	my $data = $p{data} || {};
+	for( @{$self->metadata} ) {
+		next if defined $data->{ $_->{id} };  ## data=> params have priority
+		my $rs = Baseliner->model('Baseliner::BaliConfig')->search({ ns=>$p{ns}, bl=>$p{bl}, key=>$self->key.'.'.$_->{id} })
+			or die $!;			
+		while( my $r = $rs->next ) {
+			$data->{ $_->{id} } = $r->value;
+		}
+		unless( defined $data->{ $_->{id} } ) {  ## get default value
+			$data->{ $_->{id} } = $_->{default};
+		}
+	}
 	return $data;
 }
 

@@ -1,10 +1,20 @@
 <%args>
-	$callback => ''
+	$bl
+	$job_type
+	$query => ''
 </%args>
 <%perl>
 	use JavaScript::Dumper;
-	print $callback . "(" 
-		. js_dumper({
+	use Baseliner::Core::Namespace;
+	my @ns_list = Baseliner::Core::Namespace->namespaces({ can_job=>1, bl=>$bl, job_type=>$job_type });
+	my @job_items;
+	for my $n ( @ns_list ) {
+		push @job_items, { provider=>$n->ns_type, icon=>$n->icon, item=>$n->ns_name, ns=>$n->ns, user=>$n->user, text=>$n->ns_info, date=>$n->date };
+	}
+	print '<li>', js_dumper( $_ )
+		for( @job_items ) ;
+	
+	js_dumper({
 		totalCount => 5,
 		data => [
 			{ id=>'1', provider=>'Harvest Packages', item=>'H0001S1010@01', ns=>'/apl/G0001', user=>'ROG2833Z', text=>'Paquete 1.', date=>'2009-10-01' },
@@ -13,5 +23,5 @@
 			{ id=>'4', provider=>'Releases', item=>'Rv1.002 Harvest y Endevor', ns=>'/rel/G001',user=>'ROG2833Z',  text=>'Paquete 1.' , date=>'2009-10-01'},
 			{ id=>'5', provider=>'Releases', item=>'Rv1.001 Harvest', ns=>'/rel/G0003',user=>'ROG2833Z',  text=>'Release que cambia la func.' , date=>'2009-10-01'},
 		]
-	}) . ");";
+	});
 </%perl>

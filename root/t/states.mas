@@ -1,0 +1,9 @@
+<%perl>
+	use YAML;
+	my $states = [ 'Desarrollo', 'Producción' ];
+	my $rs2 = Baseliner->model('Harvest::Harstate')->search({ statename => $states });
+	my $rs = Baseliner->model('Harvest::Harpackage')->search({ packageobjid=>{ '>', '0'}, statename=>'Desarrollo' },{ join => 'state' });
+	while( my $r=$rs->next ) {
+		print Dump $r->get_columns;
+	}
+</%perl>

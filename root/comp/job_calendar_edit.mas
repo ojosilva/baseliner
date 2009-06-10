@@ -83,10 +83,10 @@ for(my $hh=0; $hh<=24; $hh++) {
 				win.close();
 			},
 			failure: function(form, action) {
-				var upd = Ext.get('<% $panel %>').getUpdater() ;
-				upd.update( { url: '/job/calendar_show',  params: { id_cal: '<% $id_cal %>', panel: '<% $panel %>' }, scripts: true });
-				Ext.get('<% $panel %>').doLayout();
-				Ext.Msg.alert("Failure", action.result.msg);
+				//var upd = Ext.get('<% $panel %>').getUpdater() ;
+				//upd.update( { url: '/job/calendar_show',  params: { id_cal: '<% $id_cal %>', panel: '<% $panel %>' }, scripts: true });
+				//Ext.get('<% $panel %>').doLayout();
+				Ext.Msg.show({ title: "<% _loc('Failure') %>", msg: action.result.msg, width: 500, buttons: { ok: true } });
 			}
 		});
 	}

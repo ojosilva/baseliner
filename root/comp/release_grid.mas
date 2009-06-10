@@ -1,17 +1,16 @@
 (function(){
 	var store=new Ext.data.JsonStore({
-		root: 'cat' , 
+		root: 'data' , 
 		remoteSort: true,
 		totalProperty:"totalCount", 
 		id: 'rownum', 
-		url: '/job/calendar_list_json',
+		url: '/release/list/json',
 		fields: [ 
 			{  name: 'id' },
 			{  name: 'name' },
 			{  name: 'description' },
 			{  name: 'bl' },
-			{  name: 'ns' },
-			{  name: 'ns_desc' }
+			{  name: 'contents' }
 		]
 	});
 
@@ -88,7 +87,7 @@
 		// create the grid
 		var grid = new Ext.grid.GridPanel({
 			renderTo: 'main-panel',
-			title: '<% _loc('Job Calendars') %>',
+			title: '<% _loc('Releases') %>',
 			header: false,
             stripeRows: true,
 			autoScroll: true,
@@ -100,11 +99,10 @@
 			selModel: new Ext.grid.RowSelectionModel({singleSelect:true}),
 			loadMask:'true',
 			columns: [
-				{ header: '<% _loc('Calendar') %>', width: 200, dataIndex: 'name', sortable: true },	
+				{ header: '<% _loc('Release') %>', width: 200, dataIndex: 'name', sortable: true },	
 				{ header: '<% _loc('Description') %>', width: 200, dataIndex: 'description', sortable: true },	
 				{ header: '<% _loc('Baseline') %>', width: 100, dataIndex: 'bl', sortable: true },	
-				{ header: '<% _loc('Namespace') %>', width: 150, dataIndex: 'ns', sortable: true },	
-				{ header: '<% _loc('Namespace Description') %>', width: 200, dataIndex: 'ns_desc', sortable: true }	
+				{ header: '<% _loc('Contents') %>', width: 350, dataIndex: 'contents', sortable: true },	
 			],
 			autoSizeColumns: true,
 			deferredRender:true,
@@ -122,80 +120,19 @@
 					emptyText: '<Enter your search string>'
 				}),
 				new Ext.Toolbar.Button({
-					text: 'Add',
+					text: '<% _loc('Add') %>',
 					icon:'/static/ext/resources/images/default/dd/drop-add.gif',
 					cls: 'x-btn-text-icon',
 					handler: function() {
-						//Window
-						var ns_store = new Ext.data.SimpleStore({ 
-						   fields: ['value', 'name'], 
-						   data : <% js_dumper( $c->stash->{namespaces} ) %>
-						}); 
-						var bl_store = new Ext.data.SimpleStore({ 
-						   fields: ['value', 'name'], 
-						   data : <% js_dumper( $c->stash->{baselines} ) %>
-						}); 
-						var new_cal = new Ext.FormPanel({
-							url: '/job/calendar_update',
-							frame: true,
-							labelWidth: 150, 
-							defaults: { width: 250 },
-							buttons: [
-								{  text: '<% _loc('OK') %>',
-									handler: function(){ 
-										var ff = new_cal.getForm();
-										ff.submit({
-											success: function(form, action) { 
-												grid.getStore().load();
-												win.close(); 
-											},
-											failure: function(form, action) { Ext.Msg.alert("<% _loc('Failure') %>", action.result.msg); }
-										});
-									}
-								},
-								{  text: '<% _loc('Cancel') %>' , handler: function(){  win.close() } }
-							],
-							items: [
-								{  xtype: 'hidden', name: 'action', value: 'create' },
-								{  xtype: 'textfield', name: 'name', fieldLabel: '<% _loc('Calendar Name') %>' }, 
-								{  xtype: 'textarea', name: 'description', fieldLabel: '<% _loc('Description') %>' }, 
-								{  xtype: 'combo', 
-										   name: 'ns', 
-										   hiddenName: 'ns',
-										   fieldLabel: '<% _loc('Namespace') %>', 
-										   mode: 'local', 
-										   editable: false,
-										   forceSelection: true,
-										   triggerAction: 'all',
-										   store: ns_store, 
-										   valueField: 'value',
-										   value: '/',
-										   displayField:'name', 
-										   allowBlank: false,
-								},
-								{  xtype: 'combo', 
-										   name: 'bl', 
-										   hiddenName: 'bl',
-										   fieldLabel: '<% _loc('Baseline') %>',
-										   mode: 'local', 
-										   editable: false,
-										   forceSelection: true,
-										   triggerAction: 'all',
-										   store: bl_store, 
-										   valueField: 'value',
-										   value: '*',
-										   displayField:'name', 
-										   allowBlank: false
-								}
-							]
-						});
-						var win = new Ext.Window({
-							layout: 'fit',
-							height: 250, width: 450,
-							title: '<% _loc('Create Calendar') %>',
-							items: new_cal
-						});
-						win.show();
+						var sm = grid.getSelectionModel();
+						if (sm.hasSelection())
+						{
+							var sel = sm.getSelected();
+							Baseliner.addNewTab('/release/new?id_rel=' + sel.data.id , '<% _loc('New Release') %>' );
+						} else {
+							Baseliner.addNewTab('/release/new' , '<% _loc('New Release') %>' );
+						};
+						
 					}
 				}),
 				new Ext.Toolbar.Button({
@@ -207,7 +144,7 @@
 						if (sm.hasSelection())
 						{
 							var sel = sm.getSelected();
-							Baseliner.addNewTabComp('/job/calendar?id_cal=' + sel.data.id , '<% _loc('Calendar') %>');
+							Baseliner.addNewTab('/release/edit?id_rel=' + sel.data.id , sel.data.name);
 						} else {
 							Ext.Msg.alert('Error', 'Falta seleccionar una fila');	
 						};
@@ -221,15 +158,15 @@
 					handler: function() {
 						var sm = grid.getSelectionModel();
 						var sel = sm.getSelected();
-						Ext.Msg.confirm('<% _loc('Confirmation') %>', 'Are you sure you want to delete the calendar ' + sel.data.name + '?', 
+						Ext.Msg.confirm('<% _loc('Confirmation') %>', 'Are you sure you want to delete the release ' + sel.data.name + '?', 
 							function(btn){ 
 								if(btn=='yes') {
 									var conn = new Ext.data.Connection();
 									conn.request({
-										url: '/job/calendar_update',
-										params: { action: 'delete', id_cal: sel.data.id },
+										url: '/release/update',
+										params: { action: 'delete', id_rel: sel.data.id },
 										success: function(resp,opt) { grid.getStore().remove(sel); },
-										failure: function(resp,opt) { Ext.Msg.alert('<% _loc('Error') %>', '<% _loc('Could not delete the calendar.') %>'); }
+										failure: function(resp,opt) { Ext.Msg.alert('<% _loc('Error') %>', '<% _loc('Could not delete the release.') %>'); }
 									});	
 								}
 							} );
@@ -241,11 +178,12 @@
 
 		grid.on("rowdblclick", function(grid, rowIndex, e ) {
 			var r = grid.getStore().getAt(rowIndex);
-			Baseliner.addNewTabComp('/job/calendar?id_cal=' + r.get('id') , '<% _loc('Calendar') %>');
+			Baseliner.addNewTab('/release/edit?id_rel=' + r.get('id') , r.get('name') );
 		});		
 
 		Ext.getCmp('main-panel').setActiveTab( Ext.getCmp('main-panel').add(grid) ) ;
 		
 	return grid;
 })();
+
 

@@ -71,6 +71,7 @@ __PACKAGE__->setup();
 my $dbh = __PACKAGE__->model('Baseliner')->storage->dbh;
 if( $dbh->{Driver}->{Name} eq 'Oracle' ) {
 	$dbh->do("alter session set nls_date_format='yyyy-mm-dd hh24:mi:ss'");
+	$dbh->{LongReadLen} = 2147483647;
 }
 	
 	# Inversion of Control

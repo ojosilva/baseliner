@@ -26,40 +26,55 @@ register 'config.job.calendar' => {
 	],
 };
 
-
+use Baseliner::Core::Baseline;
 sub calendar_list_json : Path('/job/calendar_list_json')  {
     my ( $self, $c ) = @_;
 	my $p = $c->request->parameters;
 	my $rs = $c->model('Baseliner::BaliCalendar')->search();
 	my @rows;
 	while( my $r = $rs->next ) {
-		push @rows, { id=>$r->id, name=>$r->name, description=>$r->description, bl=>$r->bl, ns=>$r->ns, ns_desc=>'Harvest Project'  };
-	}
+        push @rows,
+          {
+            id          => $r->id,
+            name        => $r->name,
+            description => $r->description,
+            bl          => Baseliner::Core::Baseline->name( $r->bl ),
+            ns          => $r->ns,
+            ns_desc     => Baseliner::Core::Namespace->find_text( $r->ns )
+          };
+    }
 	$c->stash->{json} = { cat => \@rows };		
 	$c->forward('View::JSON');
 }
 
 sub calendar_list : Path('/job/calendar_list')  {
     my ( $self, $c ) = @_;
+	$c->forward('/namespace/load_namespaces');
+	$c->forward('/baseline/load_baselines');
     $c->stash->{template} = '/comp/job_calendar_grid.mas';
 }
 
-sub calendar_add : Path( '/job/calendar_add' ) {
-	my ( $self, $c ) = @_;
-	$c->stash->{template} = '/comp/job_calendar_comp.mas';
-}
+#sub calendar_add : Path( '/job/calendar_add' ) {
+	#my ( $self, $c ) = @_;
+	#$c->stash->{template} = '/comp/job_calendar_comp.mas';
+#}
 
 sub calendar_update : Path( '/job/calendar_update' ) {
 	my ( $self, $c ) = @_;
 	my $p = $c->req->params;
 	eval {
 		if( $p->{action} eq 'create' ) {
-			my $row = $c->model('Baseliner::BaliCalendar')->create({
-				name => $p->{name},
-				description => $p->{description},
-				ns => $p->{ns},
-				bl => $p->{bl},
-			});
+			my $r1 = $c->model('Baseliner::BaliCalendar')->search({ ns=>$p->{ns}, bl => $p->{bl} });
+			if( my $r = $r1->first ){
+				die _loc("A calendar (%1) already exists for namespace %2 and baseline %3", $r->name, $p->{ns}, $p->{bl} );
+			} else {
+				my $row = $c->model('Baseliner::BaliCalendar')->create({
+						name => $p->{name},
+						description => $p->{description},
+						ns => $p->{ns},
+						bl => $p->{bl},
+						});
+			}
 		} elsif( $p->{action} eq 'delete' ) {
 			my $row = $c->model('Baseliner::BaliCalendar')->search({id=>$p->{id_cal}});
 			$row->delete;
@@ -83,6 +98,8 @@ sub calendar_update : Path( '/job/calendar_update' ) {
 sub calendar : Path( '/job/calendar' ) {
 	my ( $self, $c ) = @_;
 	my $id_cal = $c->stash->{id_cal} = $c->req->params->{id_cal};
+	$c->forward('/namespace/load_namespaces');
+	$c->forward('/baseline/load_baselines');
 	# load the calendar row data
 	$c->stash->{calendar} = $c->model('Baseliner::BaliCalendar')->search({ id => $id_cal })->first;
 	$c->stash->{template} = '/comp/job_calendar_comp.mas';
@@ -169,7 +186,7 @@ sub calendar_submit : Path('/job/calendar_submit') {
 					#stmt.executeUpdate("DELETE FROM distventanas WHERE id=" + id);
 					$cierra=1;
 				} else {
-					print("<H5>Error: id '$id' de ventana no encontrado.</H5>"); 
+					die("<H5>Error: id '$id' de ventana no encontrado.</H5>"); 
 				}
 			}
 			elsif( $cmd eq "A" ) {
@@ -178,7 +195,7 @@ sub calendar_submit : Path('/job/calendar_submit') {
 
 				if( ref $ven && !($id eq $ven->{id}) && !("X" eq $ven->{tipo}) && !($ven_ini eq $ven->{fin}) ) {
 					#Inicio está en una ventana ya existente
-					print("<h5>Error: la hora de inicio de ventana ($ven_ini) se solapa con la siguiente ventana:<br>"
+					die("<h5>Error: la hora de inicio de ventana ($ven_ini) se solapa con la siguiente ventana:<br>"
 							. "<li>DIA=".$ven->{dia}. "<li>INICIO=".$ven->{start}
 							."<li>FIN=". $ven->{fin} . "<li>TIPO=".$ven->{tipo} . " </h5>"); 
 				} else {
@@ -187,12 +204,21 @@ sub calendar_submit : Path('/job/calendar_submit') {
 
 					if( $ven && !($id eq $ven->{id}) && !("X" eq $ven->{tipo}) && !($ven_fin eq $ven->{start}) ) { 
 						#Fin está en una ventana ya existente
-						print("<h5>Error: la hora de fin de ventana ($ven_fin) se solapa con la siguiente ventana: "
+						die("<h5>Error: la hora de fin de ventana ($ven_fin) se solapa con la siguiente ventana: "
 								. "<li>DIA=".$ven->{dia}. "<li>INICIO=".$ven->{start}
 								."<li>FIN=". $ven->{fin} . "<li>TIPO=".$ven->{tipo} . " </h5>"); 
 					} else {			
 						unless( $id ) {  #new row
-							$c->model('Baseliner::BaliCalendarWindow')->create({ day=>$ven_dia, type=>$ven_tipo, start_time=>$ven_ini, end_time=>$ven_fin });
+                            my $r =
+                              $c->model('Baseliner::BaliCalendarWindow')->create(
+                                {
+									id_cal     => $id_cal,
+                                    day        => $ven_dia,
+                                    type       => $ven_tipo,
+                                    start_time => $ven_ini,
+                                    end_time   => $ven_fin
+                                }
+                              );
 						} else {  #existing
 							my $row = $c->model('Baseliner::BaliCalendarWindow')->search({ id=>$id })->first;
 							$row->day( $ven_dia );
@@ -213,7 +239,7 @@ sub calendar_submit : Path('/job/calendar_submit') {
 				$row->update;
 				$cierra=1;
 			} else {
-				print("<h5>Error: Comando desconocido o incompleto.</h5>");
+				die("<h5>Error: Comando desconocido o incompleto.</h5>");
 			}
 
 			last unless( $cierra )

@@ -1,8 +1,13 @@
 <%init>
+	my $iid = "div-" . _nowstamp;
 	$c->stash->{job_types} = [
 		{ name=>'job_type', inputValue=> 'promote', boxLabel => _loc('Promote'), checked=>\1 },
 		{ name=>'job_type', inputValue=> 'demote', boxLabel => _loc('Demote') },
 	];
+	my $now = DateTime->now;
+	$now->set_time_zone('CET');
+    my $today =  $now->strftime('%d/%m/%Y');
+    my $hm =  $now->strftime('%H:%M');
 </%init>
 <%perl>
 
@@ -11,7 +16,7 @@
 
 Ext.onReady(function(){
     Ext.QuickTips.init();
-    var bd = Ext.get('jobForm');
+    var bd = Ext.get('jobForm<% $iid %>');
 	//------ Tabbed Job Item list 	
 	var tabpanel = new Ext.TabPanel({
 		region: 'center',
@@ -20,27 +25,22 @@ Ext.onReady(function(){
 		activeTab: 0 
 	});
 	var pp = new Ext.Panel({
-		id: 'main-view222',
 		layout: 'fit',
 		items: [ tabpanel ]
 	});
 
-	Ext.Ajax.request({
-		url: '/t/newjob_json.mas',
-		success: function(xhr) {
-			var comp = eval(xhr.responseText);
-			var tab = tabpanel.add(comp);
-			tab.setTitle( title );
-			tabpanel.setActiveTab(comp);
-		},
-		failure: function(xhr) {
-			var win = new Ext.Window({ layout: 'fit', 
-				autoScroll: true, title: ptitle+' create failed', 
-				height: 600, width: 600, 
-				html: 'Server communication failure:' + xhr.responseText });
-			win.show();
-		}
-	});
+	// hour validator
+	Ext.form.VTypes['hourVal']  = /^[0-2][0-9]:[0-5][0-9]$/; 
+	Ext.form.VTypes['hourMask'] = /[0-9:]/; 
+	Ext.form.VTypes['hourText'] = '<% _loc('Invalid hour (00:00-23:59)') %>';
+	Ext.form.VTypes['hour']     = function(v){ 
+	   var t = Ext.form.VTypes['hourVal'].test(v); 
+	   if( ! t ) return false;
+	   var arr = v.split(":"); 
+	   if( arr[0] > 23 ) return false;
+	   if( arr[1] > 59 ) return false;
+	   return true;
+	} 
 
 	var baselines = new Ext.data.SimpleStore({ 
 	   fields: ['bl', 'name'], 
@@ -69,7 +69,6 @@ Ext.onReady(function(){
 			cm: colModel
 	});
 	var tb = new Ext.Toolbar({
-			id: 'formtb',
 			style: 'margin: 3px',
 			items: [ 
 				{
@@ -113,11 +112,11 @@ Ext.onReady(function(){
 						json.push( Ext.util.JSON.encode( rec.data )) ;
 					}
 					var json_res = '[' + json.join(',') + ']';
-					movie_form.getForm().submit({
+					main_form.getForm().submit({
 						params: { job_contents: json_res },
 						success: function(form,action){
 							Ext.Msg.show({ title: "<% _loc('Success') %>", msg: action.result.msg, width: 500, buttons: { ok: true } });
-							movie_form.getForm().reset();
+							main_form.getForm().reset();
 						},
 						failure: function(form,action){
 							Ext.Msg.show({ title: "<% _loc('Failure') %>", msg: action.result.msg, width: 500, buttons: { ok: true } });
@@ -127,13 +126,13 @@ Ext.onReady(function(){
 			},
 			{ xtype:'button',text:'<% _loc('Reset') %>', handler: function() { 
 					jc_grid.getStore().removeAll();
-					movie_form.getForm().reset();
+					main_form.getForm().reset();
 				}  
 			}] 
 	});
-	var movie_form = new Ext.FormPanel({ 
+	var main_form = new Ext.FormPanel({ 
 			 url: '/job/submit', 
-			 renderTo: 'jobForm',
+			 renderTo: 'jobForm<% $iid %>',
 			 frame: true, 
 			 title: '<% _loc('Job Options') %>', 
 			 width: 900, 
@@ -159,6 +158,9 @@ Ext.onReady(function(){
 					   forceSelection: true,
 					   triggerAction: 'all',
 					   allowBlank: false,
+					   listeners: {
+					   	   select: { fn: function(){ jc_grid.getStore().removeAll(); } }
+						},
 					   width: 120 
 				}, 
 				  { 
@@ -172,12 +174,16 @@ Ext.onReady(function(){
 					fieldLabel: '<% _loc('Date') %>', 
 				    allowBlank: false,
 					format: 'd/m/Y',
+					value: '<% $today %>',
+					minValue: '<% $today %>',
 					name: 'job_date' 
 				  },
 				  { 
 					xtype: 'textfield', 
 					fieldLabel: '<% _loc('Time') %>', 
 				    allowBlank: false,
+					value: '<% $hm %>',
+					vtype: 'hour',
 					name: 'job_time' 
 				  },
 				  jc_grid
@@ -190,15 +196,22 @@ Ext.onReady(function(){
     var ds_combo = new Ext.data.Store({
         proxy: new Ext.data.HttpProxy({
             url: '/job/items/json',
-			param: { bl: movie_form.getForm().findField('bl').getValue() }
+			param: { bl: main_form.getForm().findField('bl').getValue() }
         }),
 		listeners: {
 			beforeload: {
 				fn: function(store,opt) {
-					var bl = movie_form.getForm().findField('bl').getValue(); 
-					var job_type = movie_form.getForm().getValues()['job_type'];
+					var bl = main_form.getForm().findField('bl').getValue(); 
+					var job_type = main_form.getForm().getValues()['job_type'];
 					store.baseParams.bl = bl;
 					store.baseParams.job_type = job_type;
+				}
+			},
+			load: {
+				fn: function(store,opt) {
+					if( store.getTotalCount() == 0 ) {
+						Ext.Msg.alert("<% _loc('Warning') %>", "<% _loc('No records found') %>");
+					}
 				}
 			}
 		},
@@ -237,7 +250,7 @@ Ext.onReady(function(){
         pageSize:10,
         hideTrigger:true,
         tpl: resultTpl,
-        applyTo: 'search',
+        applyTo: 'search<% $iid %>',
         itemSelector: 'div.search-item',
         onSelect: function(record){ // override default onSelect to do redirect
 			ds_grid.add(record);
@@ -247,21 +260,22 @@ Ext.onReady(function(){
 
 	//-----------------
 
-	//Baseliner.addNewTabItem( movie_form, 'New Job');
+	//Baseliner.addNewTabItem( main_form, 'New Job');
 });
 
 </script>
 
-<div class='tab-style' id='jobForm' />
+<div class='tab-style' id='jobForm<% $iid %>' />
 
 <div class='tab-style' style="width:600px;">
     <div class="x-box-tl"><div class="x-box-tr"><div class="x-box-tc"></div></div></div>
     <div class="x-box-ml"><div class="x-box-mr"><div class="x-box-mc">
         <h3 style="margin-bottom:5px;"><% _loc('Add Job Items') %></h3>
-			<input type="text" size="40" name="search" id="search" />
+			<input type="text" size="40" name="search<% $iid %>" id="search<% $iid %>" />
         <div style="padding-top:4px;"><% _loc('Live search requires a minimum of 4 characters.') %></div>
     </div></div></div>
     <div class="x-box-bl"><div class="x-box-br"><div class="x-box-bc"></div></div></div>
 </div>
+
 
 

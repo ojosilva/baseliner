@@ -146,4 +146,14 @@ __PACKAGE__->has_many(
 
 
 # You can replace this text with custom content, and it will be preserved on regeneration
+__PACKAGE__->belongs_to(
+  "state",
+  "Baseliner::Schema::Harvest::Result::Harstate",
+  { stateobjid => "stateobjid" },
+);
+__PACKAGE__->belongs_to(
+  "modifier",
+  "Baseliner::Schema::Harvest::Result::Harallusers",
+  { usrobjid => "modifierid" },
+);
 1;

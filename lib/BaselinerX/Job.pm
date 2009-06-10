@@ -39,13 +39,13 @@ register 'config.job' => {
 	],
 };
 
-register 'menu.job' => { label => 'Jobs' };
-register 'menu.job.create' => { label => 'Create a new Job', url=>'/t/newjob.mas', title=>_loc('New Job') };
+register 'menu.job' => { label => _loc('Jobs') };
+register 'menu.job.create' => { label => _loc('Create a new Job'), url=>'/job/create', title=>_loc('New Job') };
 #register 'menu.job.list' => { label => 'List Current Jobs', url=>'/maqueta/list.mas', title=>'Job Monitor' };
 #register 'menu.job.exec' => { label => 'Exec Current Jobs', url_run=>'/maqueta/list.mas', title=>'Job Monitor' };
-register 'menu.job.hist' => { label => 'Historical Data', handler => 'function(){ Ext.Msg.alert("Hello"); }' };
+#register 'menu.job.hist' => { label => 'Historical Data', handler => 'function(){ Ext.Msg.alert("Hello"); }' };
 register 'menu.job.list' => { label => 'Monitor', url_comp => '/job/monitor', title=>'Monitor' };
-register 'menu.job.hist.all' => { label => 'List all Jobs', url=>'/core/registry', title=>'Registry'  };
+#register 'menu.job.hist.all' => { label => 'List all Jobs', url=>'/core/registry', title=>'Registry'  };
 
 register 'service.job.new' => {
 	name => 'Schedule a new job',
@@ -152,6 +152,12 @@ sub job_expired {
     return;
 }
 
+sub job_name {
+	my $p = shift;
+	my $prefix = $p->{type} eq 'promote' ? 'N' : 'B';
+	return sprintf( $p->{mask}, $prefix, $p->{bl} eq '*' ? 'ALL' : $p->{bl} , $p->{id} );
+}
+
 sub create_job {
 	my ($self,$c,$config)=@_;
 	my $status = $config->{status};
@@ -169,16 +175,50 @@ sub create_job {
     #my $ora_now = DateTime::Format::Oracle->format_datetime( $now );
     #my $ora_end = DateTime::Format::Oracle->format_datetime( $end );
     #warn "ORA=$ora_now";
-	my $job = $c->model('balijob')->create({ name=>'temp'.$$, starttime=> $ora_now, endtime=>$ora_end, maxstarttime=>$ora_end, status=> $status, ns=>'/sct', bl=>'TEST' });
+	my $job = $c->model('Baseliner::BaliJob')->create({ name=>'temp'.$$, starttime=> $ora_now, endtime=>$ora_end, maxstarttime=>$ora_end, status=> $status, ns=>'/sct', bl=>'TEST' });
 	my $name = $config->{name} 
-        || sprintf( $config->{mask}, 'N', 
-        $c->inf_bl eq '*' ? 'ALL' : $c->inf_bl , 
-        $job->id );
+        || job_name({ mask=>$config->{mask}, type=>'promote', bl=>$c->inf_bl, id=>$job->id });
 	$config->{runner} && $job->runner( $config->{runner} );
 	#$config->{chain} && $job->chain( $config->{chain} );
 	warn "Creating JOB $name";
 	$job->name( $name );
 	$job->update;
+	return $name;
+}
+
+sub job_create : Path('/job/create')  {
+    my ( $self, $c ) = @_;
+	$c->forward('/namespace/load_namespaces');
+	$c->forward('/baseline/load_baselines_no_root');
+    $c->stash->{template} = '/comp/job_new.mas';
+}
+
+sub job_items_json : Path('/job/items/json') {
+    my ( $self, $c ) = @_;
+	my $p = $c->req->params;
+	use Baseliner::Core::Namespace;
+	my @ns_list = Baseliner::Core::Namespace->namespaces({ can_job=>1, bl=>$p->{bl}, job_type=>$p->{job_type}, query=>$p->{query} });
+	my @job_items;
+	my $cnt=1;
+	for my $n ( @ns_list ) {
+        push @job_items,
+          {
+			id => $cnt++,
+            provider => $n->ns_type,
+            icon     => $n->icon,
+            item     => $n->ns_name,
+            ns       => $n->ns,
+            user     => $n->user,
+            text     => $n->ns_info,
+            date     => $n->date,
+            data     => $n->ns_data
+          };
+	}
+	$c->stash->{json} = {
+		totalCount => scalar @job_items,
+		data => [ @job_items ]
+	};
+	$c->forward('View::JSON');
 }
 
 sub monitor_json : Path('/job/monitor_json') {
@@ -208,12 +248,58 @@ use JSON::XS;
 sub job_submit : Path('/job/submit') {
     my ( $self, $c ) = @_;
 	my $p = $c->request->parameters;
-	my $contents = decode_json $p->{contents};
-	if( !$contents ) {
-		
+	my $config = $c->registry->get('config.job')->data;
+	my $runner = 'service.job.simple';  #TODO from config
+	my $job_name;
+	eval {
+		my $bl = $p->{bl};
+		my $comments = $p->{comments};
+		my $job_date = $p->{job_date};
+		my $job_time = $p->{job_time};
+		my $job_type = $p->{job_type};
+		my $contents = decode_json $p->{job_contents};
+		die _loc('No job contents') if( !$contents );
+		# create job
+		my $start = parse_date('dd/mm/Y', "$job_date $job_time");
+		#$start->set_time_zone('CET');
+		my $end = $start->clone->add( hours => 1 );
+		my $ora_start =  $start->strftime('%Y-%m-%d %T');
+		my $ora_end =  $end->strftime('%Y-%m-%d %T');
+        my $job = $c->model('Baseliner::BaliJob')->create(
+            {
+                name         => 'temp' . $$,
+                starttime    => $ora_start,
+                endtime      => $ora_end,
+                maxstarttime => $ora_end,
+                status       => 'IN EDIT',
+                ns           => '/',
+                bl           => $bl,
+            }
+        );
+		$job_name = job_name({ mask=>'%s.%s%08d', type=>$job_type, bl=>$bl, id=>$job->id });
+		$job->name( $job_name );
+		$job->update;
+		# create job items
+		for my $item ( @{ $contents || [] } ) {
+			warn Dump $item;
+			my $items = $c->model('Baseliner::BaliJobItems')->create({
+				data => YAML::Dump($item->{data}),
+				item => $item->{item},
+				runner => $runner, 
+				provider => $item->{provider}, 
+				id_job => $job->id,
+			});
+		}
+		# let it run
+		$job->status( 'READY' );
+		$job->update;
+	};
+	if( $@ ) {
+		$c->stash->{json} = { success => \0, msg => _loc("Error creating the job: %1", $@) };
+	} else {
+		$c->stash->{json} = { success => \1, msg => _loc("Job %1 created.", $job_name) };
 	}
-	#$c->res->body( '<pre' . Dump $p );
-	##$self->create_job( $c, $p );
+	$c->forward('View::JSON');	
 }
 
 sub job_new : Path('/job/new') {

@@ -5,16 +5,16 @@
 (function(){
 	var ns_store = new Ext.data.SimpleStore({ 
 	   fields: ['value', 'name'], 
-	   data : <% js_dumper( [ ['/', 'General' ] ] ) %>
+	   data : <% js_dumper( $c->stash->{namespaces} ) %>
 	}); 
 	var bl_store = new Ext.data.SimpleStore({ 
 	   fields: ['value', 'name'], 
-	   data : <% js_dumper( [ ['*', _loc('All') ] ] ) %>
+	   data : <% js_dumper( $c->stash->{baselines} ) %>
 	}); 
 	var cal_form = new Ext.FormPanel({
 				url: '/job/calendar_update',
 				frame: true,
-				title: 'Calendar Info',
+				title: '<% _loc('Calendar Info') %>',
 				width: 500,
 				height: 300,
 				autoHeight: true,
@@ -46,7 +46,7 @@
 					{  xtype: 'combo', 
 							   name: 'ns', 
 							   hiddenName: 'ns',
-							   fieldLabel: 'Namespace', 
+							   fieldLabel: '<% _loc('Namespace') %>', 
 							   mode: 'local', 
 							   editable: false,
 							   forceSelection: true,
@@ -60,7 +60,7 @@
 					{  xtype: 'combo', 
 							   name: 'bl', 
 							   hiddenName: 'bl',
-							   fieldLabel: 'Baseline',
+							   fieldLabel: '<% _loc('Baseline') %>',
 							   mode: 'local', 
 							   editable: false,
 							   forceSelection: true,
@@ -80,7 +80,7 @@
 		items: [
 			cal_form,
 			{  xtype: 'panel',
-				title: 'Calendar Windows',
+				title: '<% _loc('Calendar Windows') %>',
 				style: 'margin-top: 20px',
 				frame: true,
 				width: 700,

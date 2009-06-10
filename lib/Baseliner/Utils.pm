@@ -6,7 +6,7 @@ Some utilities shared by different Baseliner modules and plugins.
 
 =cut 
 
-use Exporter::Tidy default => [ qw/_loc _log slashFwd slashBack slashSingle _unique _throw _say _now _nowstamp parse_date/ ];
+use Exporter::Tidy default => [ qw/_loc _log slashFwd slashBack slashSingle _unique _throw _say _now _nowstamp parse_date query_array/ ];
 use FindBin '$Bin';
 use Locale::Maketext::Simple (
 			Style => 'gettext',
@@ -86,6 +86,13 @@ sub rs_data {
 	}
 	return @data;
 }
+
+sub query_array {
+	my $query = shift;
+	my $txt = join ',', @_;  ##TODO check for "and", "or", etc. 
+	return $txt =~ m/$query/i;
+}
+
 
 1;
 

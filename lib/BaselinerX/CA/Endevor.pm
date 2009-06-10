@@ -78,6 +78,16 @@ register 'service.endevor.execute' => {
 	}
 };
 
+#TODO get endevor packages in namespace
+register 'namespace.endevor.packages' => {
+	name	=>'Endevor Packages',
+	root    => '/apl',
+	handler => sub {
+		my @ns;
+		return \@ns;
+	},
+};
+
 sub new {
 	my $class = shift();
 	my %opts = @_;

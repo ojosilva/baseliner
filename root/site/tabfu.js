@@ -33,7 +33,11 @@
 					var comp = eval(xhr.responseText);
 					Baseliner.addNewTabItem( comp, ptitle );
 				} catch(err) {
-					Ext.Msg.alert("Error Rendering Component", err);
+					if( xhr.responseText.indexOf('dhandler') ) {
+						Ext.Msg.alert("Page not found: ", comp_url );
+					} else {
+						Ext.Msg.alert("Error Rendering Component", err);
+					}
 				}
 			},
 			failure: function(xhr) {

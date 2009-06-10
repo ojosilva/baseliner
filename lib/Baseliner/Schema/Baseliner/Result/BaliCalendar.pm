@@ -25,7 +25,7 @@ __PACKAGE__->add_columns(
   "ns",
   {
     data_type => "VARCHAR2",
-    default_value => undef,
+    default_value => "'/'",
     is_nullable => 0,
     size => 100,
   },
@@ -52,8 +52,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.04005 @ 2009-06-08 21:15:46
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:2x2aV8DeH/Q6uzi/ZOJr2g
+# Created by DBIx::Class::Schema::Loader v0.04005 @ 2009-06-10 12:25:05
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:641FOuFVvlI6Cq+tRaberQ
 
 
 # You can replace this text with custom content, and it will be preserved on regeneration

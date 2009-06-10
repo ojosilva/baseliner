@@ -19,7 +19,7 @@ __PACKAGE__->add_columns(
   {
     data_type => "VARCHAR2",
     default_value => undef,
-    is_nullable => 0,
+    is_nullable => 1,
     size => 45,
   },
   "starttime",
@@ -73,8 +73,41 @@ __PACKAGE__->add_columns(
     is_nullable => 1,
     size => 126,
   },
+  "comments",
+  {
+    data_type => "VARCHAR2",
+    default_value => undef,
+    is_nullable => 1,
+    size => 1024,
+  },
+  "type",
+  {
+    data_type => "VARCHAR2",
+    default_value => undef,
+    is_nullable => 1,
+    size => 100,
+  },
+  "userid",
+  {
+    data_type => "VARCHAR2",
+    default_value => undef,
+    is_nullable => 1,
+    size => 255,
+  },
+  "ts",
+  {
+    data_type => "DATE",
+    default_value => "sysdate",
+    is_nullable => 1,
+    size => 19,
+  },
 );
 __PACKAGE__->set_primary_key("id");
+__PACKAGE__->has_many(
+  "bali_job_items",
+  "Baseliner::Schema::Baseliner::Result::BaliJobItems",
+  { "foreign.id_job" => "self.id" },
+);
 __PACKAGE__->has_many(
   "bali_logs",
   "Baseliner::Schema::Baseliner::Result::BaliLog",
@@ -82,8 +115,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.04005 @ 2009-06-08 21:15:46
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:TpY2vK54af4ebpJvJRxi3g
+# Created by DBIx::Class::Schema::Loader v0.04005 @ 2009-06-10 12:25:05
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:wfbn7jYV92mVC3XVSmIdLw
 
 
 # You can replace this text with custom content, and it will be preserved on regeneration
