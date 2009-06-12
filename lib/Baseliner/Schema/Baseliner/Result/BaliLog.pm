@@ -29,7 +29,7 @@ __PACKAGE__->add_columns(
     is_nullable => 1,
     size => 10,
   },
-  "job_id",
+  "id_job",
   {
     data_type => "NUMBER",
     default_value => undef,
@@ -50,25 +50,35 @@ __PACKAGE__->add_columns(
     is_nullable => 1,
     size => 2147483647,
   },
-  "wiki_id",
+  "ts",
   {
-    data_type => "NUMBER",
+    data_type => "DATE",
+    default_value => "SYSDATE",
+    is_nullable => 1,
+    size => 19,
+  },
+  "ns",
+  {
+    data_type => "VARCHAR2",
+    default_value => "'/'",
+    is_nullable => 1,
+    size => 255,
+  },
+  "provider",
+  {
+    data_type => "VARCHAR2",
     default_value => undef,
     is_nullable => 1,
-    size => 126,
+    size => 255,
   },
 );
 __PACKAGE__->set_primary_key("id");
-__PACKAGE__->belongs_to(
-  "job_id",
-  "Baseliner::Schema::Baseliner::Result::BaliJob",
-  { id => "job_id" },
-);
 
 
-# Created by DBIx::Class::Schema::Loader v0.04005 @ 2009-06-10 12:25:05
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:1mDMINM8KXtWRo8kofi/1g
+# Created by DBIx::Class::Schema::Loader v0.04006 @ 2009-06-10 21:07:42
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:iQsUXJU4KHZoEDhdozZ8NA
 
 
 # You can replace this text with custom content, and it will be preserved on regeneration
 1;
+

@@ -1,5 +1,5 @@
-msgid "hello"
-msgstr "jelo"
+msgid "Main"
+msgstr "Principal"
 
 msgid "Searching..."
 msgstr "Buscando"
@@ -19,14 +19,35 @@ msgstr "Ámbito Global"
 msgid "Namespace Description"
 msgstr "Descripción del Ámbito"
 
+msgid "Job Restarted"
+msgstr "Pase Reiniciado"
+
 msgid "Job Type"
 msgstr "Tipo de Pase"
 
 msgid "Job Item"
-msgstr ""
+msgstr "Elemento de Pase"
 
 msgid "Item Type"
-msgstr ""
+msgstr "Tipo de Elemento"
+
+msgid "Status"
+msgstr "Estado de Ejecución"
+
+msgid "Job"
+msgstr "Pase"
+
+msgid "Job Status"
+msgstr "Estado del Pase"
+
+msgid "Start Date"
+msgstr "Fecha de Inicio"
+
+msgid "End Date"
+msgstr "Fecha de Finalización"
+
+msgid "Max Start Date"
+msgstr "Fecha Máxima de Inicio"
 
 msgid "User"
 msgstr "Usuario"
@@ -61,14 +82,20 @@ msgstr "Falta rellenar el contenido del pase"
 msgid "Live search requires a minimum of 4 characters."
 msgstr "Para iniciar la búsqueda es necesario un mínimo de 4 caracteres."
 
+msgid "Are you sure you want to delete the job"
+msgstr "¿Está seguro de que quiere borrar el pase"
+
+msgid "Job %1 is currently running and cannot be deleted"
+msgstr "Pase %1 está actualmente en ejecución y no puede borrarse"
+
 msgid "Submit"
 msgstr "Enviar"
 
 msgid "New"
-msgstr "Nueva"
+msgstr "Crear"
 
 msgid "Add"
-msgstr "Nueva"
+msgstr "Crear"
 
 msgid "Reset"
 msgstr "Resetear"
@@ -79,8 +106,29 @@ msgstr "Crear Nuevo Pase"
 msgid "Jobs"
 msgstr "Pases"
 
+msgid "Message"
+msgstr "Mensaje"
+
+msgid "Timestamp"
+msgstr "Fecha-Hora"
+
+msgid "Provider"
+msgstr "Origen"
+
+msgid "Level"
+msgstr "Nivel"
+
 msgid "New Job"
 msgstr "Nuevo Pase"
+
+msgid "Cancel Job"
+msgstr "Cancelar Pase"
+
+msgid "View Log"
+msgstr "Ver Log de Pase"
+
+msgid "<Enter your search string>"
+msgstr "<Introduzca cadena de búsqueda>"
 
 msgid "Job Monitor"
 msgstr "Monitor de Pases"
@@ -93,6 +141,12 @@ msgstr "Opciones del Pase"
 
 msgid "Baseline"
 msgstr "Entorno"
+
+msgid "Service"
+msgstr "Servicio"
+
+msgid "Comment"
+msgstr "Observación"
 
 msgid "Comments"
 msgstr "Observaciones"
@@ -118,12 +172,21 @@ msgstr "Aviso"
 msgid "Confirmation"
 msgstr "Confirmación"
 
+msgid "Rerun"
+msgstr "Reiniciar"
+
+msgid "Are you sure you want to rerun the job"
+msgstr "¿Seguro que quiere reiniciar el pase"
+
 msgid "No records found"
 msgstr "No hay registros"
 
 # Calendario
 msgid "Could not delete the calendar."
 msgstr "No he podido borrar el calendario."
+
+msgid "Job Calendars"
+msgstr "Calendarios de Pase"
 
 msgid "Calendar Windows"
 msgstr "Ventanas del Calendario"
@@ -198,8 +261,39 @@ msgstr "Nueva Release"
 msgid "Add Release Items"
 msgstr "Añadir Elementos a la Release"
 
+msgid "Contents"
+msgstr "Contenido"
+
 msgid "List Releases"
 msgstr "Listar Releases"
 
 msgid "Release Name '%1' already exists."
 msgstr "Nombre de Release '%1' ya existe."
+
+# Job Status Codes
+msgid "IN-EDIT"
+msgstr "En Edición"
+
+msgid "READY"
+msgstr "Esperando Inicio"
+
+msgid "EXPIRED"
+msgstr "Caducado"
+
+msgid "KILLED"
+msgstr "Matado"
+
+msgid "RUNNING"
+msgstr "En Ejecución"
+
+msgid "FINISHED"
+msgstr "Finalizado"
+
+msgid "ERROR"
+msgstr "Error"
+
+msgid "DONE"
+msgstr "Finalizado"
+
+
+

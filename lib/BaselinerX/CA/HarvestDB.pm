@@ -23,6 +23,7 @@ sub package_check_status {
 	return { can_job=>1, why_not=>'' };
 }
 
+#TODO needs to be in config:
 our %from_states = ( 
 	DES => {  promote => [ 'Desarrollo', 'Desarrollo Integrado' ], demote => 0 },
 	PRE => {  promote => [ 'Desarrollo Integrado' ], demote => [ 'Pruebas Integradas', 'Pruebas de Acceptación', 'Pruebas Sistemas' ] },
@@ -39,6 +40,19 @@ sub state_for_job {
 		return $states;
 	}
 }
+register 'service.harvest.runner.package' => {
+	name => 'Job Service for Harvest Packages',
+	handler => sub {
+		my ($self,$c,$config) =@_;
+
+		my $job = $c->stash->{job};
+		my $log = $job->logger;
+
+		$log->debug( 'Iniciando Servicio de Paquetes de Harvest path=' . $job->{path} );
+
+	}
+
+};
 
 register 'namespace.harvest.package' => {
 	name	=>_loc('Harvest Packages'),
@@ -62,11 +76,12 @@ register 'namespace.harvest.package' => {
 		}
         my $rs = Baseliner->model('Harvest::Harpackage')->search( $sql_query,{ join => [ 'state','modifier' ] });
 		my @ns;
+        my $ns_type= _loc('Harvest Package');
 		while( my $r = $rs->next ) {
 			( my $pkg_short = lc( $r->packagename ) )=~ s/\s/_/g;
 			my $status = package_check_status($p, $r );
 			my $info = _loc('State').': '.$r->state->statename."<br>" . _loc('Project').': '.$r->envobjid->environmentname."<br>" ;
-			next if( $query && !query_array($query, $r->packagename, $r->modifier->username, $r->state->statename ));
+			next if( $query && !query_array($query, $r->packagename, $r->modifier->username, $r->state->statename, $ns_type ));
             push @ns, Baseliner::Core::Namespace->new({
                 ns      => '/package/' . $pkg_short,
                 ns_name => $r->get_column('packagename'),
@@ -75,8 +90,9 @@ register 'namespace.harvest.package' => {
 				date    => $r->get_column('modifiedtime'),
 				icon    => '/static/images/scm/package.gif',
 				can_job => $status->{can_job}, 
+				service => 'service.harvest.runner.package',
 				why_not => $status->{why_not},
-				ns_type => _loc('Harvest Package'),
+				ns_type => $ns_type,
 				ns_id   => $r->packageobjid,
 				ns_data => { $r->get_columns },
 			});

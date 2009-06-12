@@ -108,7 +108,7 @@ Ext.onReady(function(){
 			}] 
 	});
 	var main_form = new Ext.FormPanel({ 
-			 url: '/release/submit', 
+			 url: '/release/update', 
 			 renderTo: 'releaseForm<% $iid %>',
 			 frame: true, 
 			 title: '<% _loc('Release Options') %>', 
@@ -212,7 +212,7 @@ Ext.onReady(function(){
         typeAhead: false,
         loadingText: '<% _loc('Searching...') %>',
         width: 570,
-        pageSize:10,
+        pageSize: 20,
         hideTrigger:true,
         tpl: resultTpl,
         applyTo: 'search<% $iid %>',

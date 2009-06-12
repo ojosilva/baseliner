@@ -1,4 +1,5 @@
 <%init>
+use Encode qw( decode_utf8 encode_utf8 is_utf8 );
 my $id = $c->stash->{id};
 my $id_cal = $c->stash->{id_cal};
 my $panel = $c->stash->{panel};
@@ -21,7 +22,8 @@ my @ven_fin;
 
 # ven_dia
 foreach my $dd ( 0..6 ) {
-	my $day_name = capitalize( $day_wide->[ Encode::encode_utf8( $dd ) ] );
+	#my $day_name = capitalize( $day_wide->[ Encode::encode_utf8( $dd ) ] );
+	my $day_name = capitalize( $day_wide->[ $dd ] );
 	push @ven_dia, [ $dd , $day_name  ];
 					#<OPTION VALUE="<% $dd %>" <% ($dia eq $dd ?'SELECTED':'') %>><% capitalize( $day_wide->[ Encode::encode_utf8( $dd ) ] ) %></OPTION>
 }

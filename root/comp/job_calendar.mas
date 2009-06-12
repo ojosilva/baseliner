@@ -35,7 +35,7 @@ Ext.onReady(function(){
 	<TABLE>
 		<TR><TD>&nbsp;</TD>
 % foreach my $dd ( @{ $day_wide || [] } ) {
-			<TH width='100'><% Encode::encode_utf8( $dd ) %></TH>
+			<TH width='100'><% $dd %></TH>
 % }
 		</TR>
 <%perl>

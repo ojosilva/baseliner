@@ -1,4 +1,5 @@
 package Baseliner::Core::Namespace;
+use Baseliner::Utils;
 use Moose;
 
 has 'ns' => ( is=>'rw', isa=>'Str', required=>1 ); ## the namespace path
@@ -11,6 +12,7 @@ has 'ns_parent' => ( is=>'rw', isa=>'Any' );  ## parent ns
 has 'can_job' => ( is=>'rw', isa=>'Bool', default=>0 );  ## can it be listed for jobs?
 has 'icon' => ( is=>'rw', isa=>'Str' );  ## icon path or css to represent ns
 has 'user' => ( is=>'rw', isa=>'Str', default=>'-' ); 
+has 'service' => ( is=>'rw', isa=>'Str' ); 
 has 'date' => ( is=>'rw', isa=>'Str', );  ## object last modified date
 
 no Moose;

@@ -119,10 +119,10 @@
 				new Ext.app.SearchField({
 					store: store,
 					params: {start: 0, limit: ps},
-					emptyText: '<Enter your search string>'
+					emptyText: '<% _loc('<Enter your search string>') %>'
 				}),
 				new Ext.Toolbar.Button({
-					text: 'Add',
+					text: '<% _loc('Add') %>',
 					icon:'/static/ext/resources/images/default/dd/drop-add.gif',
 					cls: 'x-btn-text-icon',
 					handler: function() {

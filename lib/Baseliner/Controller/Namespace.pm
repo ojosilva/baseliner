@@ -7,9 +7,9 @@ use YAML;
 register 'menu.admin.ns' => { label => _loc('List all Namespaces'), url=>'/core/namespaces', title=>_loc('Namespaces')  };
 
 sub load_namespaces : Private {
-	my ($self,$c)=@_;
+	my ($self,$c, $p)=@_;
 	my @ns_arr = ();
-	my @ns_list = Baseliner::Core::Namespace->namespaces();
+	my @ns_list = Baseliner::Core::Namespace->namespaces($p);
 	foreach my $n ( @ns_list ) {
 		my $arr = [ $n->ns, $n->ns_text ];
 		push @ns_arr, $arr;

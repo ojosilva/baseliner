@@ -30,7 +30,6 @@ register 'menu.release' => { label => _loc('Releases') };
 register 'menu.release.new' => { label => _loc('Create a new Release'), url=>'/release/new', title=>_loc('New Release') };
 register 'menu.release.list' => { label => _loc('List Releases'), url_comp => '/release/list', title=>_loc('Releases') };
 
-
 sub release_contents :Private {
     my ( $self, $c ) = @_;
 	my $id_rel = $c->stash->{id};
@@ -110,57 +109,65 @@ sub release_json : Path('/release/list/json') {
 
 
 use JSON::XS;
-sub release_submit : Path('/release/submit') {
+sub release_update : Path('/release/update') {
     my ( $self, $c ) = @_;
 	my $p = $c->request->parameters;
+    my $action = $p->{action};
 	my $config = $c->registry->get('config.release')->data;
 	my $release_name = $p->{release_name};
 	eval {
-		# check if release exists
-		unless( $p->{id_rel} ) {
-			my $other = $c->model('Baseliner::BaliRelease')->search({ name=>$release_name });
-			if( $other->first ) {
-				die _loc("Release Name '%1' already exists.",$release_name); 
-			}
-		}
-		my $bl = $p->{bl};
-		my $comments = $p->{comments};
-		my $contents = decode_json $p->{release_contents};
-		die _loc('No release contents') if( !$contents );
-        my $release;
-		if( $p->{id_rel} ) {
-			$release = $c->model('Baseliner::Balirelease')->search({ id=> $p->{id_rel} })->first;
-			if( $release ) {
-				$release->name( $release_name );
-				$release->bl( $bl );
-				$release->description( $comments );
-			}
-			# delete all old items
-			my $rs = $c->model('Baseliner::BaliReleaseItems')->search({ id_rel=>$p->{id_rel} });
-			for( $rs->next ) {
-			    $_->delete;
-			}
-			
-		} else {
-			$release = $c->model('Baseliner::Balirelease')->create({
-					name         => $release_name,
-					bl           => $bl,
-					description  => $comments,
-					active 	     => 1,
-			});
-		}
-		# create release items
-		for my $item ( @{ $contents || [] } ) {
-			my $items = $c->model('Baseliner::BaliReleaseItems')->create({
-				data => YAML::Dump($item->{data}),
-				item => $item->{item},
-				provider => $item->{provider}, 
-				id_rel => $release->id,
-			});
-		}
+        if( $action eq 'delete' ) {
+            my $release = $c->model('Baseliner::Balirelease')->search({ id=> $p->{id_rel} })->first;
+            $release->delete;
+        }
+        else {
+            # check if release exists
+            unless( $p->{id_rel} ) {
+                my $other = $c->model('Baseliner::BaliRelease')->search({ name=>$release_name });
+                if( $other->first ) {
+                    die _loc("Release Name '%1' already exists.",$release_name); 
+                }
+            }
+            my $bl = $p->{bl};
+            my $comments = $p->{comments};
+            my $contents = decode_json $p->{release_contents};
+            die _loc('No release contents') if( !$contents );
+            my $release;
+            if( $p->{id_rel} ) {
+                $release = $c->model('Baseliner::Balirelease')->search({ id=> $p->{id_rel} })->first;
+                if( $release ) {
+                    $release->name( $release_name );
+                    $release->bl( $bl );
+                    $release->description( $comments );
+                }
+                # delete all old items
+                my $rs = $c->model('Baseliner::BaliReleaseItems')->search({ id_rel=>$p->{id_rel} });
+                for( $rs->next ) {
+                    $_->delete;
+                }
+                
+            } else {
+                $release = $c->model('Baseliner::Balirelease')->create({
+                        name         => $release_name,
+                        bl           => $bl,
+                        description  => $comments,
+                        active 	     => 1,
+                });
+            }
+            # create release items
+            for my $item ( @{ $contents || [] } ) {
+                my $items = $c->model('Baseliner::BaliReleaseItems')->create({
+                    data => YAML::Dump($item->{data}),
+                    item => $item->{item},
+                    provider => $item->{provider}, 
+                    id_rel => $release->id,
+                });
+            }
+        }
 	};
 	if( $@ ) {
-		$c->stash->{json} = { success => \0, msg => _loc("Error creating the release: %1", $@) };
+        warn $@;
+		$c->stash->{json} = { success => \0, msg => _loc("Error creating the release: ").$@ };
 	} else {
 		$c->stash->{json} = { success => \1, msg => _loc("Release %1 created.", $release_name) };
 	}

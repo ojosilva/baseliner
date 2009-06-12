@@ -1,0 +1,170 @@
+(function(){
+	// La fuente de Datos JSON con todos el listado:
+	var store=new Ext.data.JsonStore({
+		root: 'data' , 
+		remoteSort: true,
+		totalProperty:"totalCount", 
+		id: 'id', 
+		url: '/job/log/json',
+		baseParams: {  id_job: '<% $c->stash->{id_job} %>' },
+		fields: [ 
+			{  name: 'id' },
+			{  name: 'id_job' },
+			{  name: 'job' },
+			{  name: 'text' },
+			{  name: 'ts' },
+			{  name: 'level' },
+			{  name: 'ns' },
+			{  name: 'provider' }
+		]
+	});
+
+	// Esta es la definición del objeto buscador
+	Ext.app.SearchField = Ext.extend(Ext.form.TwinTriggerField, {
+		initComponent : function(){
+			Ext.app.SearchField.superclass.initComponent.call(this);
+			this.on('specialkey', function(f, e){
+				if(e.getKey() == e.ENTER){
+					this.onTrigger2Click();
+				}
+			}, this);
+		},
+
+		validationEvent:false,
+		validateOnBlur:false,
+		trigger1Class:'x-form-clear-trigger',
+		trigger2Class:'x-form-search-trigger',
+		hideTrigger1:true,
+		width:280,
+		hasSearch : false,
+		paramName : 'query',
+
+		onTrigger1Click : function(){
+			if(this.hasSearch){
+				this.el.dom.value = '';
+				var o = {start: 0};
+				this.store.baseParams = this.store.baseParams || {};
+				this.store.baseParams[this.paramName] = '';
+				this.store.reload({params:o});
+				this.triggers[0].hide();
+				this.hasSearch = false;
+			}
+		},
+
+		onTrigger2Click : function(){
+			var v = this.getRawValue();
+			if(v.length < 1){ //>
+				this.onTrigger1Click();
+				return;
+			}
+			var o = {start: 0};
+			this.store.baseParams = this.store.baseParams || {};
+			this.store.baseParams[this.paramName] = v;
+			this.store.reload({params:o});
+			this.hasSearch = true;
+			this.triggers[0].show();
+		}
+	});
+
+	var addNewTabComp = function( purl, ptitle ){
+		var myTabPanel = Ext.getCmp('main-panel');
+		Ext.Ajax.request({
+			url: purl,
+			success: function(xhr) {
+				var comp = eval(xhr.responseText);
+				var tab = comp.add(newComponent);
+				tab.title( ptitle );
+				comp.setActiveTab(newComponent);
+			},
+			failure: function(xhr) {
+				var win = new Ext.Window({ layout: 'fit', 
+					autoScroll: true, title: ptitle+' create failed', 
+					height: 600, width: 600, 
+					html: 'Server communication failure:' + xhr.responseText });
+				win.show();
+			}
+		});
+	};
+
+	// Después de que cargue la página:
+		var ps = 50; //page_size
+		store.load({params:{start:0 , limit: ps, id_job: '<% $c->stash->{id_job} %>' }}); 
+
+		// create the grid
+		var grid = new Ext.grid.GridPanel({
+			renderTo: 'main-panel',
+			title: '<% _loc('Job Log') %>',
+			header: false,
+            stripeRows: true,
+			autoScroll: true,
+			autoWidth: true,
+			store: store,
+			viewConfig: [{
+					forceFit: true
+			}],
+			selModel: new Ext.grid.RowSelectionModel({singleSelect:true}),
+			loadMask:'true',
+			columns: [
+				{ header: '<% _loc('Job') %>', width: 120, dataIndex: 'job', sortable: true },	
+				{ header: '<% _loc('Level') %>', width: 60, dataIndex: 'level', sortable: true },
+				{ header: '<% _loc('Timestamp') %>', width: 140, dataIndex: 'ts', sortable: true },	
+				{ header: '<% _loc('Message') %>', width: 450, dataIndex: 'text', sortable: true },
+				{ header: '<% _loc('Namespace') %>', width: 100, dataIndex: 'ns', sortable: true },	
+				{ header: '<% _loc('Provider') %>', width: 100, dataIndex: 'provider', sortable: true }	
+            ],
+			autoSizeColumns: true,
+			deferredRender:true,
+			bbar: new Ext.PagingToolbar({
+								store: store,
+								pageSize: ps,
+								displayInfo: true,
+								displayMsg: 'Rows {0} - {1} de {2}',
+								emptyMsg: "No hay registros disponibles"
+						}),        
+			tbar: [ 'Buscar: ', ' ',
+				new Ext.app.SearchField({
+					store: store,
+					params: {start: 0, limit: ps, id_job: '<% $c->stash->{id_job} %>' },
+					emptyText: '<% _loc('<Enter your search string>') %>'
+				}),
+<%doc>
+				new Ext.Toolbar.Button({
+					text: '<% _loc('View Log') %>',
+					icon:'/static/ext/resources/images/default/dd/drop-yes.gif',
+					cls: 'x-btn-text-icon',
+					handler: function() {
+						Baseliner.addNewTab('/job/log/list', '<% _loc('Job Log') %>');
+					}
+				}),
+</%doc>
+				'->'
+				]
+		});
+
+		grid.on("rowdblclick", function(grid, rowIndex, e ) {
+			var r = grid.getStore().getAt(rowIndex);
+			Ext.Ajax.request({
+				url: '/job/log/data',
+				params: { id: r.get('id') },
+				success: function(xhr) {
+					var win = new Ext.Window({ layout: 'fit', 
+						autoScroll: true, title: r.get('text'),
+						height: 600, width: 700, 
+						html: xhr.responseText });
+					win.show();
+				},
+				failure: function(xhr) {
+					var win = new Ext.Window({ layout: 'fit', 
+						autoScroll: true, title: 'Error', 
+						height: 600, width: 700, 
+						html: 'Server communication failure:' + xhr.responseText });
+					win.show();
+				}
+			});
+			//Baseliner.addNewTabComp('/job/log/list?id_job=' + r.get('id') , '<% _loc('Log') %>' + r.get('name') );
+		});		
+		Ext.getCmp('main-panel').setActiveTab( Ext.getCmp('main-panel').add(grid) ) ;
+	return grid;
+})();
+
+

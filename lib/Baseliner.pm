@@ -47,7 +47,7 @@ use Cache::FastMmap;
 	sub Cache::FastMmap::CLONE {} ## to avoid the no threads die 
 }
 __PACKAGE__->config->{cache}->{storage} = 'bali_cache';
-__PACKAGE__->config->{cache}->{expires} = 333600;
+__PACKAGE__->config->{cache}->{expires} = 60;  ## 60 seconds
 #__PACKAGE__->config->{authentication}{dbic} = {
 #    user_class     => 'Bali::BaliUser',
 #    user_field     => 'username',
@@ -71,7 +71,23 @@ __PACKAGE__->setup();
 my $dbh = __PACKAGE__->model('Baseliner')->storage->dbh;
 if( $dbh->{Driver}->{Name} eq 'Oracle' ) {
 	$dbh->do("alter session set nls_date_format='yyyy-mm-dd hh24:mi:ss'");
-	$dbh->{LongReadLen} = 2147483647;
+	#$dbh->do("alter session set nls_lang='SPANISH_SPAIN.UTF8'");
+    $dbh->{LongReadLen} = 100000000; #64 * 1024;
+    #	$dbh->{LongReadLen} = 2147483647;
+    $dbh->{LongTruncOk} = 0; # do not accept truncated LOBs	
+    # set sequences for oracle tables - avoid checking triggers for content
+    Baseliner::Schema::Baseliner::Result::BaliBaseline->sequence('bali_baseline_seq');
+    Baseliner::Schema::Baseliner::Result::BaliCalendar->sequence('bali_calendar_seq');
+    Baseliner::Schema::Baseliner::Result::BaliCalendarWindow->sequence('bali_calendar_window_seq');
+    Baseliner::Schema::Baseliner::Result::BaliChainedService->sequence('bali_chained_service_seq');
+    Baseliner::Schema::Baseliner::Result::BaliChain->sequence('bali_chain_seq');
+    Baseliner::Schema::Baseliner::Result::BaliConfig->sequence('bali_config_seq');
+    Baseliner::Schema::Baseliner::Result::BaliJobItems->sequence('bali_job_items_seq');
+    Baseliner::Schema::Baseliner::Result::BaliJob->sequence('bali_job_seq');
+    Baseliner::Schema::Baseliner::Result::BaliLog->sequence('bali_log_seq');
+    Baseliner::Schema::Baseliner::Result::BaliNamespace->sequence('bali_namespace_seq');
+    Baseliner::Schema::Baseliner::Result::BaliReleaseItems->sequence('bali_release_items_seq');
+    Baseliner::Schema::Baseliner::Result::BaliRelease->sequence('bali_release_seq');
 }
 	
 	# Inversion of Control

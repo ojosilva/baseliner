@@ -6,9 +6,9 @@ use base 'Catalyst::Model::DBIC::Schema';
 __PACKAGE__->config(
     schema_class => 'Baseliner::Schema::Baseliner',
     connect_info => [
-        'dbi:Oracle://192.168.1.22/XE',
-        'gbp',
-        'gbp',
+        'dbi:Oracle:POPULAR.WORLD',
+        'uharvest',
+        'uharvest',
         
     ],
 );
@@ -26,7 +26,7 @@ L<Catalyst::Model::DBIC::Schema> Model using schema L<Baseliner::Schema::Baselin
 
 =head1 AUTHOR
 
-Rodrigo de Oliveira
+A clever guy
 
 =head1 LICENSE
 

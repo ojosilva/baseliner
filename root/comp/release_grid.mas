@@ -117,7 +117,7 @@
 				new Ext.app.SearchField({
 					store: store,
 					params: {start: 0, limit: ps},
-					emptyText: '<Enter your search string>'
+					emptyText: '<% _loc('<Enter your search string>') %>'
 				}),
 				new Ext.Toolbar.Button({
 					text: '<% _loc('Add') %>',

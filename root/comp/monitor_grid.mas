@@ -1,0 +1,211 @@
+(function(){
+	// La fuente de Datos JSON con todos el listado:
+	var store=new Ext.data.JsonStore({
+		root: 'data' , 
+		remoteSort: true,
+		totalProperty:"totalCount", 
+		id: 'id', 
+		url: '/job/monitor_json',
+		fields: [ 
+			{  name: 'id' },
+			{  name: 'name' },
+			{  name: 'type' },
+			{  name: 'bl' },
+			{  name: 'bl_text' },
+			{  name: 'starttime' },
+			{  name: 'maxstarttime' },
+			{  name: 'endtime' },
+			{  name: 'runner' },
+			{  name: 'comments' },
+			{  name: 'status_code' },
+			{  name: 'status' }
+		]
+	});
+
+	// Esta es la definición del objeto buscador
+	Ext.app.SearchField = Ext.extend(Ext.form.TwinTriggerField, {
+		initComponent : function(){
+			Ext.app.SearchField.superclass.initComponent.call(this);
+			this.on('specialkey', function(f, e){
+				if(e.getKey() == e.ENTER){
+					this.onTrigger2Click();
+				}
+			}, this);
+		},
+
+		validationEvent:false,
+		validateOnBlur:false,
+		trigger1Class:'x-form-clear-trigger',
+		trigger2Class:'x-form-search-trigger',
+		hideTrigger1:true,
+		width:280,
+		hasSearch : false,
+		paramName : 'query',
+
+		onTrigger1Click : function(){
+			if(this.hasSearch){
+				this.el.dom.value = '';
+				var o = {start: 0};
+				this.store.baseParams = this.store.baseParams || {};
+				this.store.baseParams[this.paramName] = '';
+				this.store.reload({params:o});
+				this.triggers[0].hide();
+				this.hasSearch = false;
+			}
+		},
+
+		onTrigger2Click : function(){
+			var v = this.getRawValue();
+			if(v.length < 1){ //>
+				this.onTrigger1Click();
+				return;
+			}
+			var o = {start: 0};
+			this.store.baseParams = this.store.baseParams || {};
+			this.store.baseParams[this.paramName] = v;
+			this.store.reload({params:o});
+			this.hasSearch = true;
+			this.triggers[0].show();
+		}
+	});
+
+	var addNewTabComp = function( purl, ptitle ){
+		var myTabPanel = Ext.getCmp('main-panel');
+		Ext.Ajax.request({
+			url: purl,
+			success: function(xhr) {
+				var comp = eval(xhr.responseText);
+				var tab = comp.add(newComponent);
+				tab.title( ptitle );
+				comp.setActiveTab(newComponent);
+			},
+			failure: function(xhr) {
+				var win = new Ext.Window({ layout: 'fit', 
+					autoScroll: true, title: ptitle+' create failed', 
+					height: 600, width: 600, 
+					html: 'Server communication failure:' + xhr.responseText });
+				win.show();
+			}
+		});
+	};
+
+	// Después de que cargue la página:
+		var ps = 15; //page_size
+		store.load({params:{start:0 , limit: ps}}); //, {{fid: '<% 1 %>' , par1: '<% 2 %>', cam: '<% 3 %>', filtro: 'ALL' }});
+
+		// create the grid
+		var grid = new Ext.grid.GridPanel({
+			renderTo: 'main-panel',
+			title: '<% _loc('Job Monitor') %>',
+			header: false,
+            stripeRows: true,
+			autoScroll: true,
+			autoWidth: true,
+			store: store,
+			viewConfig: [{
+					forceFit: true
+			}],
+			selModel: new Ext.grid.RowSelectionModel({singleSelect:true}),
+			loadMask:'true',
+			columns: [
+				{ header: '<% _loc('Job') %>', width: 100, dataIndex: 'name', sortable: true },	
+				{ header: '<% _loc('Job Status') %>', width: 100, dataIndex: 'status', sortable: true },
+				{ header: '<% _loc('Baseline') %>', width: 50, dataIndex: 'bl', sortable: true },	
+				{ header: '<% _loc('Job Type') %>', width: 100, dataIndex: 'type', sortable: true }	,
+				{ header: '<% _loc('Start Date') %>', width: 150, dataIndex: 'starttime', sortable: true },	
+				{ header: '<% _loc('Max Start Date') %>', width: 150, dataIndex: 'maxstarttime', sortable: true },	
+				{ header: '<% _loc('End Date') %>', width: 150, dataIndex: 'endtime', sortable: true },	
+				{ header: '<% _loc('Comments') %>', width: 200, dataIndex: 'comments', sortable: true }	
+            ],
+			autoSizeColumns: true,
+			deferredRender:true,
+			bbar: new Ext.PagingToolbar({
+								store: store,
+								pageSize: ps,
+								displayInfo: true,
+								displayMsg: 'Rows {0} - {1} de {2}',
+								emptyMsg: "No hay registros disponibles"
+						}),        
+			tbar: [ 'Buscar: ', ' ',
+				new Ext.app.SearchField({
+					store: store,
+					params: {start: 0, limit: ps},
+					emptyText: '<% _loc('<Enter your search string>') %>'
+				}),
+				new Ext.Toolbar.Button({
+					text: '<% _loc('New Job') %>',
+					icon:'/static/ext/resources/images/default/dd/drop-add.gif',
+					cls: 'x-btn-text-icon',
+					handler: function() {
+						Baseliner.addNewTab('/job/create', '<% _loc('Create New Job') %>');
+					}
+				}),
+				new Ext.Toolbar.Button({
+					text: '<% _loc('View Log') %>',
+					icon:'/static/ext/resources/images/default/dd/drop-yes.gif',
+					cls: 'x-btn-text-icon',
+					handler: function() {
+						var sm = grid.getSelectionModel();
+						if (sm.hasSelection())
+						{
+							var sel = sm.getSelected();
+                            Baseliner.addNewTabComp('/job/log/list?id_job=' + sel.data.id, '<% _loc('Log') %>'+ ' ' + sel.data.name );
+						} else {
+							Ext.Msg.alert('Error', 'Hay que seleccionar una fila.');	
+						};
+					}
+				}),
+				new Ext.Toolbar.Button({
+					text: '<% _loc('Cancel Job') %>',
+					icon:'/static/ext/resources/images/default/dd/del.gif',
+					cls: 'x-btn-text-icon',
+					handler: function() {
+						var sm = grid.getSelectionModel();
+						var sel = sm.getSelected();
+						Ext.Msg.confirm('<% _loc('Confirmation') %>', '<% _loc('Are you sure you want to delete the job') %> ' + sel.data.name + '?', 
+							function(btn){ 
+								if(btn=='yes') {
+									var conn = new Ext.data.Connection();
+									conn.request({
+										url: '/job/submit',
+										params: { action: 'delete', id_job: sel.data.id },
+										success: function(resp,opt) { grid.getStore().remove(sel); },
+										failure: function(resp,opt) { Ext.Msg.alert('<% _loc('Error') %>', '<% _loc('Could not delete the job.') %>'); }
+									});	
+								}
+							} );
+					}
+				}),
+				new Ext.Toolbar.Button({
+					text: '<% _loc('Rerun') %>',
+					icon:'/static/gui/icons/asterisk_orange.png',
+					cls: 'x-btn-text-icon',
+					handler: function() {
+						var sm = grid.getSelectionModel();
+						var sel = sm.getSelected();
+						Ext.Msg.confirm('<% _loc('Confirmation') %>', '<% _loc('Are you sure you want to rerun the job') %> ' + sel.data.name + '?', 
+							function(btn){ 
+								if(btn=='yes') {
+									var conn = new Ext.data.Connection();
+									conn.request({
+										url: '/job/submit',
+										params: { action: 'rerun', id_job: sel.data.id },
+										success: function(resp,opt) { Ext.Msg.alert('<% _loc('Success') %>', '<% _loc('Job Restarted') %>'); },
+										failure: function(resp,opt) { Ext.Msg.alert('<% _loc('Error') %>', '<% _loc('Could not rerun the job.') %>'); }
+									});	
+								}
+							} );
+					}
+				}),
+				'->'
+				]
+		});
+
+		grid.on("rowdblclick", function(grid, rowIndex, e ) {
+			var r = grid.getStore().getAt(rowIndex);
+			Baseliner.addNewTabComp('/job/log/list?id_job=' + r.get('id') , '<% _loc('Log') %>' + ' ' + r.get('name') );
+		});		
+		Ext.getCmp('main-panel').setActiveTab( Ext.getCmp('main-panel').add(grid) ) ;
+	return grid;
+})();
+

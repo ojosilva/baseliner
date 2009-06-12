@@ -16,7 +16,7 @@ BEGIN { extends 'Catalyst::Controller' };
 	no Moose;
 }
 
-register 'menu.job.calendar' => { label => 'Edit Job Calendars', url_comp=>'/job/calendar_list', title=>_loc('Job Calendars') };
+register 'menu.job.calendar' => { label => _loc('Job Calendars'), url_comp=>'/job/calendar_list', title=>_loc('Job Calendars') };
 
 register 'config.job.calendar' => {
 	metadata=> [
@@ -88,7 +88,8 @@ sub calendar_update : Path( '/job/calendar_update' ) {
 		}
 	};
 	if( $@ ) {
-		$c->stash->{json} = { success => \0, msg => _loc("Error modifying the calendar: %1", $@) };
+        warn $@;
+		$c->stash->{json} = { success => \0, msg => _loc("Error modifying the calendar: ").$@  };
 	} else {
 		$c->stash->{json} = { success => \1, msg => _loc("Calendar modified.") };
 	}
@@ -246,7 +247,8 @@ sub calendar_submit : Path('/job/calendar_submit') {
 		}
 	};
 	if( $@ ) {
-		$c->stash->{json} = { success => \0, msg => _loc("Error modifying the calendar: %1", $@) };
+        warn $@;
+		$c->stash->{json} = { success => \0, msg => _loc("Error modifying the calendar: ").$@ };
 	} else {
 		$c->stash->{json} = { success => \1, msg => _loc("Calendar modified.") };
 	}
